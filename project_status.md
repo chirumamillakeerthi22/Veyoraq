@@ -22,14 +22,23 @@ These versions were reported by the project owner. Recheck them if the environme
 
 ## 3. Current Application Status
 
-- The VEYORAQ project folder exists.
-- The Next.js application has NOT been verified as created.
-- A package.json file has NOT been verified inside the project root.
-- Running npm run dev previously failed with ENOENT because npm could not find package.json in the current working directory.
-- The owner has not yet confirmed that the development server starts successfully.
-- No successful application build or browser test has been recorded.
+VERIFIED on 2026-10-09 (commands run from D:\Projects\VEYORAQ):
 
-Do not describe VEYORAQ as a functioning website until the relevant checks succeed.
+- The Next.js application is initialized in the project root (App Router, `app/` directory). It is still the unmodified create-next-app default template; no VEYORAQ features exist yet.
+- package.json exists. Installed: next 16.4.0, react 19.3.0, react-dom 19.3.0, TypeScript 5, Tailwind CSS 4 (via `@tailwindcss/turbopack`), ESLint 9.
+- Node.js v24.18.0 and npm 11.19.0 confirmed by running `node -v` and `npm -v`.
+- `npm run lint` — passed (exit code 0, no warnings).
+- `npx tsc --noEmit` — passed (exit code 0).
+- `npm run build` — passed; routes `/` and `/_not-found` prerendered as static.
+- `npm run dev` — server ready on http://localhost:3000; `GET /` returned 200; the default page rendered in a browser with no console errors, at desktop width and at 375 px mobile width (no horizontal overflow).
+- Git repository exists on branch `master` with 2 commits.
+- `.claude/launch.json` was added so the dev server can be started from the Claude preview pane.
+
+The earlier ENOENT failure of `npm run dev` is INFERRED to have come from running the command outside the project root; it does not reproduce from D:\Projects\VEYORAQ.
+
+Note: AGENTS.md warns that this Next.js version has breaking changes. Read the relevant guide in `node_modules/next/dist/docs/` before writing application code.
+
+Do not describe VEYORAQ as a functioning product; only the default template runs.
 
 ## 4. Planned Technology
 
@@ -57,21 +66,20 @@ These are planned capabilities, not verified implementations.
 
 ## 6. Not Yet Verified
 
-- Next.js installation
 - Homepage implementation
 - AI API integration
 - Supabase database and authentication
 - Product catalogue
 - Product matching and price calculations
-- Automated tests
-- Git repository and initial commit
+- Automated tests (no test framework or test script is installed)
+- shadcn/ui (not installed)
 - Vercel deployment
 
 ## 7. Current Blocker
 
-The project owner needs to confirm the contents of D:\Projects\VEYORAQ and initialize the application if it has not already been created.
+None. The foundation works locally.
 
-First inspect the actual folder. Do not overwrite existing files.
+Next step: build the VEYORAQ homepage (MVP priority 2), replacing the default template in `app/page.tsx` and the default metadata in `app/layout.tsx`.
 
 ## 8. Update Rules
 

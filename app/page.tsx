@@ -1,69 +1,272 @@
-import Image from "next/image";
+import { ButtonLink } from "@/components/button-link";
+import { Container } from "@/components/container";
+import { EditorialArt, type ArtVariant } from "@/components/editorial-art";
+import { stylistHref } from "@/lib/navigation";
+
+const benefits = [
+  {
+    title: "Understand Your Style",
+    text: "Discover the silhouettes, colors, and details that feel most like you.",
+  },
+  {
+    title: "Style What You Own",
+    text: "Find fresh ways to combine pieces already in your wardrobe.",
+  },
+  {
+    title: "Discover Your Next Piece",
+    text: "Explore curated fashion that complements your preferences and budget.",
+  },
+];
+
+const steps = [
+  {
+    title: "Tell us what you love.",
+    text: "Share the occasions, colors and pieces you reach for most.",
+  },
+  {
+    title: "Explore your personal style direction.",
+    text: "See the shapes, palettes and details that suit your taste.",
+  },
+  {
+    title: "Build outfits and discover pieces that fit your life.",
+    text: "Combine what you own with considered additions, within your budget.",
+  },
+];
+
+const inspirations: {
+  title: string;
+  text: string;
+  variant: ArtVariant;
+  alt: string;
+}[] = [
+  {
+    title: "Effortless Everyday",
+    text: "Soft layers and easy shapes for the days in between.",
+    variant: "shirt",
+    alt: "Illustration of a white tee on a hanger against a soft rose circle",
+  },
+  {
+    title: "Modern Minimal",
+    text: "Clean lines, quiet color and nothing unnecessary.",
+    variant: "trousers",
+    alt: "Illustration of dark tailored trousers against a muted olive panel",
+  },
+  {
+    title: "Elevated Occasion",
+    text: "Considered pieces for the moments worth dressing for.",
+    variant: "dress",
+    alt: "Illustration of an olive dress on a hanger inside a rose arch",
+  },
+];
+
+const samplePalette = [
+  { name: "Ivory", className: "bg-ivory" },
+  { name: "Taupe", className: "bg-taupe" },
+  { name: "Rose", className: "bg-rose" },
+  { name: "Olive", className: "bg-olive" },
+];
+
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs uppercase tracking-[0.22em] text-stone">{children}</p>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* Hero */}
+      <section aria-labelledby="hero-heading">
+        <Container className="grid gap-10 pb-20 pt-10 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-16 lg:gap-20 lg:pb-32 lg:pt-20">
+          <div>
+            <Eyebrow>Personal styling, made clearer</Eyebrow>
+            <h1
+              id="hero-heading"
+              className="mt-5 font-display text-[clamp(3.5rem,9vw,7.5rem)] leading-[0.95] tracking-tight"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Style, <em className="block">decoded.</em>
+            </h1>
+            <p className="mt-6 max-w-md text-lg leading-8 text-stone lg:mt-8 lg:text-xl lg:leading-9">
+              Get to know your style. Make more of your wardrobe. Discover
+              pieces that feel like you.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row md:flex-col md:items-start lg:mt-10 xl:flex-row">
+              <ButtonLink href={stylistHref}>Discover My Style</ButtonLink>
+              <ButtonLink href="/#how-it-works" variant="secondary">
+                Explore the Experience
+              </ButtonLink>
+            </div>
+          </div>
+
+          <div className="relative mb-8 md:mb-0">
+            <div className="aspect-[5/4] overflow-hidden sm:aspect-[3/2] md:aspect-[4/5]">
+              <EditorialArt
+                variant="coat"
+                alt="Illustration of a taupe coat on a hanger inside a soft white arch"
+              />
+            </div>
+            <div className="absolute -bottom-8 left-4 border border-sand bg-soft-white px-4 py-3 shadow-sm md:-left-6 md:bottom-10 lg:px-5 lg:py-4">
+              <p className="text-[0.6875rem] uppercase tracking-[0.2em] text-stone">
+                Sample palette
+              </p>
+              <ul className="mt-2 flex gap-2" aria-label="Sample palette colors">
+                {samplePalette.map((swatch) => (
+                  <li
+                    key={swatch.name}
+                    className={`h-7 w-7 border border-sand lg:h-8 lg:w-8 ${swatch.className}`}
+                  >
+                    <span className="sr-only">{swatch.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Value proposition */}
+      <section
+        id="discover"
+        aria-labelledby="discover-heading"
+        className="scroll-mt-20 border-t border-sand md:scroll-mt-24"
+      >
+        <Container className="py-16 md:py-24 lg:py-32">
+          <div className="max-w-2xl">
+            <Eyebrow>What we&rsquo;re building</Eyebrow>
+            <h2
+              id="discover-heading"
+              className="mt-4 font-display text-4xl leading-tight md:text-5xl lg:text-6xl"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+              A clearer way to get dressed.
+            </h2>
+          </div>
+          <ul className="mt-10 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-14">
+            {benefits.map((benefit, index) => (
+              <li key={benefit.title} className="border-t border-espresso/20 pt-6">
+                <p
+                  aria-hidden="true"
+                  className="font-display text-2xl italic text-olive"
+                >
+                  0{index + 1}
+                </p>
+                <h3 className="mt-4 font-display text-2xl md:text-[1.75rem] md:leading-9">
+                  {benefit.title}
+                </h3>
+                <p className="mt-3 leading-7 text-stone">{benefit.text}</p>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
+
+      {/* How it works */}
+      <section
+        id="how-it-works"
+        aria-labelledby="how-heading"
+        className="scroll-mt-20 border-y border-sand bg-soft-white md:scroll-mt-24"
+      >
+        <Container className="grid gap-10 py-16 md:py-24 lg:grid-cols-12 lg:gap-16 lg:py-32">
+          <div className="lg:col-span-5">
+            <Eyebrow>How it works</Eyebrow>
+            <h2
+              id="how-heading"
+              className="mt-4 font-display text-4xl leading-tight md:text-5xl lg:text-6xl"
+            >
+              Three steps, <em>at your pace.</em>
+            </h2>
+            <p className="mt-6 max-w-md leading-7 text-stone">
+              This is the journey we&rsquo;re designing. The guided experience
+              is in development and isn&rsquo;t available yet.
+            </p>
+          </div>
+          <ol className="lg:col-span-7">
+            {steps.map((step, index) => (
+              <li
+                key={step.title}
+                className="flex gap-5 border-t border-sand py-7 first:border-t-0 first:pt-0 md:gap-8 lg:first:border-t lg:first:pt-7"
+              >
+                <span
+                  aria-hidden="true"
+                  className="w-10 shrink-0 font-display text-4xl leading-none text-olive md:w-14 md:text-5xl"
+                >
+                  {index + 1}
+                </span>
+                <div>
+                  <h3 className="font-display text-2xl leading-8 md:text-[1.75rem] md:leading-9">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 leading-7 text-stone">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </section>
+
+      {/* Editorial style showcase */}
+      <section
+        id="style-journal"
+        aria-labelledby="journal-heading"
+        className="scroll-mt-20 md:scroll-mt-24"
+      >
+        <Container className="py-16 md:py-24 lg:py-32">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
+            <div>
+              <Eyebrow>Style Journal</Eyebrow>
+              <h2
+                id="journal-heading"
+                className="mt-4 font-display text-4xl leading-tight md:text-5xl lg:text-6xl"
+              >
+                Three ways to feel like yourself.
+              </h2>
+            </div>
+            <p className="max-w-xs text-sm leading-6 text-stone">
+              Style inspirations, shown as illustrations. These are not product
+              listings.
+            </p>
+          </div>
+          <ul className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-5 md:mt-16 lg:gap-10">
+            {inspirations.map((item) => (
+              <li key={item.title}>
+                <figure>
+                  <div className="aspect-[4/3] overflow-hidden sm:aspect-[4/5]">
+                    <EditorialArt variant={item.variant} alt={item.alt} />
+                  </div>
+                  <figcaption className="mt-5">
+                    <h3 className="font-display text-2xl md:text-[1.75rem]">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 leading-7 text-stone">{item.text}</p>
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
+
+      {/* Closing call to action */}
+      <section
+        aria-labelledby="closing-heading"
+        className="on-dark bg-espresso text-ivory"
+      >
+        <Container className="flex flex-col items-center py-20 text-center md:py-28 lg:py-36">
+          <h2
+            id="closing-heading"
+            className="max-w-3xl font-display text-4xl leading-tight md:text-5xl lg:text-6xl"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Your style is personal.{" "}
+            <em>Your discovery should be, too.</em>
+          </h2>
+          <ButtonLink
+            href={stylistHref}
+            variant="inverse"
+            className="mt-10 w-full sm:w-auto"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            Start Discovering
+          </ButtonLink>
+        </Container>
+      </section>
+    </>
   );
 }

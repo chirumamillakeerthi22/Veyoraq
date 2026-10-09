@@ -31,11 +31,14 @@ Recheck the versions if the environment changes.
 
 ### Project structure (VERIFIED 2026-10-09)
 
-Application code (all still the create-next-app default template):
-- `app/layout.tsx` — root layout; metadata title is still "Create Next App".
-- `app/page.tsx` — default starter page.
-- `app/globals.css` — imports Tailwind CSS, default colour variables.
-- `app/favicon.ico`, `public/*.svg` — default template assets.
+Application code:
+- `app/layout.tsx` — root layout: fonts, metadata, skip link, announcement strip, shared header and footer.
+- `app/page.tsx` — VEYORAQ homepage.
+- `app/stylist/page.tsx` — "in development" placeholder that every call to action links to. No questionnaire exists.
+- `app/globals.css` — Tailwind import, colour and font tokens, focus and reduced-motion rules.
+- `components/` — `site-header.tsx`, `mobile-nav.tsx` (the only client component), `site-footer.tsx`, `button-link.tsx`, `container.tsx`, `editorial-art.tsx`.
+- `lib/navigation.ts` — navigation links shared by header, mobile menu and footer.
+- `app/favicon.ico`, `public/*.svg` — default template assets, now unused by the pages but left in place.
 
 Configuration:
 - `package.json`, `package-lock.json` — scripts: `dev`, `build`, `start`, `lint`.
@@ -49,20 +52,20 @@ Documentation: `AGENTS.md`, `claude.md`, `BUILD_GUIDE.md`, `README.md`, `project
 
 Generated, not committed: `node_modules/`, `.next/`, `next-env.d.ts`, `tsconfig.tsbuildinfo`.
 
-Not present: `components/`, `lib/`, API route handlers, tests, `.env*` files, Supabase or OpenAI code.
+Not present: API route handlers, tests, `.env*` files, Supabase or OpenAI code, photography.
 
 ## 3. Current Application Status
 
 VERIFIED on 2026-10-09 (commands run from D:\Projects\VEYORAQ):
 
-- The Next.js application is initialized in the project root (App Router, `app/` directory). It is still the unmodified create-next-app default template; no VEYORAQ features exist yet.
+- The Next.js application is initialized in the project root (App Router, `app/` directory). At the time of these setup checks it was the unmodified create-next-app template; the homepage was built afterwards (see "Homepage" below).
 - package.json exists. Installed: next 16.4.0, react 19.3.0, react-dom 19.3.0, TypeScript 5, Tailwind CSS 4 (via `@tailwindcss/turbopack`), ESLint 9.
 - Node.js v24.18.0 and npm 11.19.0 confirmed by running `node -v` and `npm -v`.
 - `npm run lint` — passed (exit code 0, no warnings).
 - `npx tsc --noEmit` — passed (exit code 0).
 - `npm run build` — passed; routes `/` and `/_not-found` prerendered as static.
 - `npm run dev` — server ready on http://localhost:3000; `GET /` returned 200; the default page rendered in a browser with no console errors, at desktop width and at 375 px mobile width (no horizontal overflow).
-- Git repository exists on branch `master` with 3 commits (latest: `d4881e5`). Nothing has been pushed.
+- Git repository exists on branch `master`. Nothing has been pushed.
 - `.claude/launch.json` was added so the dev server can be started from the Claude preview pane.
 - Re-verified later on 2026-10-09: `npm run lint` and `npx tsc --noEmit` passed again, `http://localhost:3000` returned 200, the default page rendered with no browser console errors and no server errors in the dev log. `npm run build` was not re-run in this second pass.
 - Unresolved errors: none.
@@ -71,7 +74,34 @@ The earlier ENOENT failure of `npm run dev` is INFERRED to have come from runnin
 
 Note: AGENTS.md warns that this Next.js version has breaking changes. Read the relevant guide in `node_modules/next/dist/docs/` before writing application code.
 
-Do not describe VEYORAQ as a functioning product; only the default template runs.
+Do not describe VEYORAQ as a functioning product; only a static homepage and a placeholder page exist.
+
+### Homepage (built 2026-10-09, awaiting owner review)
+
+Sections implemented, in order: announcement strip, header with navigation, hero, value proposition (`#discover`), how it works (`#how-it-works`), editorial style showcase (`#style-journal`), closing call to action, footer.
+
+Design decisions:
+- Palette from the brief, defined as tokens in `app/globals.css`. One colour was added: stone `#5F554D` for secondary text, because taupe, rose and olive do not have enough contrast for small text on ivory.
+- Fonts via `next/font/google`: Cormorant Garamond (display serif) and Geist (sans, already in the template).
+- Imagery is original SVG illustration (`components/editorial-art.tsx`), not photography. No remote images and no image licences are involved. The page states that the showcase is illustration and not product listings.
+- "Find My Style", "Discover My Style" and "Start Discovering" all link to `/stylist`, which says the questionnaire is not built. Nav links scroll to homepage sections. There are no Privacy or Terms links because no such pages exist.
+- Copy in the value and how-it-works sections is worded as what is being built, and the how-it-works section says the experience is not available yet.
+
+Responsive behaviour:
+- Below 768 px: menu button with a drop-down panel, single-column hero (text and full-width buttons first, then a landscape-cropped illustration), stacked sections.
+- 640 px and up: showcase becomes three columns. 768 px and up: horizontal navigation with header button, two-column hero with a portrait illustration, three-column value section.
+- 1024 px and up: how-it-works splits into heading and steps columns. 1280 px and up: hero buttons sit side by side.
+
+Verification (all on the dev server at http://localhost:3000 unless stated):
+- `npm run lint` — passed. `npx tsc --noEmit` — passed. `npm run build` — passed; `/`, `/_not-found` and `/stylist` prerendered as static.
+- Measured in the browser at 1440, 1280, 1024, 768, 640, 430, 375 and 327 px: document width equals viewport width and no element extends past the viewport. 327 px was the narrowest the preview pane allowed; 320 px was NOT tested.
+- Every visible link and button is at least 44 px tall at those widths.
+- Mobile menu at 375 px: opens, `aria-expanded` and label update, Tab moves into the links with a visible focus outline, Escape closes it and returns focus to the button, choosing a link closes it and scrolls to the section below the sticky header.
+- Navigation: "Start Discovering" reaches `/stylist`; the footer "Style Journal" link from `/stylist` returns to the homepage section.
+- No browser console errors and no dev-server errors.
+- Looked at visually (screenshots): all sections at 1440 px; hero, open menu and showcase at 375 px; hero at 768 px; `/stylist` at 375 px. Other widths were checked by measurement only. The preview pane's screenshots were unreliable at emulated sizes (timeouts, cropped or tiled captures), so the owner should look at the page on a real phone and in Chrome DevTools.
+
+Not tested: real devices, browsers other than the preview pane, screen readers, a full colour-contrast audit, Lighthouse/performance, the production build in a browser, reduced-motion behaviour.
 
 ## 4. Planned Technology
 
@@ -99,7 +129,7 @@ These are planned capabilities, not verified implementations.
 
 ## 6. Not Yet Verified
 
-- Homepage implementation
+- Homepage on real devices and with real photography
 - AI API integration
 - Supabase database and authentication
 - Product catalogue
@@ -110,9 +140,11 @@ These are planned capabilities, not verified implementations.
 
 ## 7. Current Blocker
 
-None. The foundation works locally.
+None.
 
-Next step: build the VEYORAQ homepage (MVP priority 2), replacing the default template in `app/page.tsx` and the default metadata in `app/layout.tsx`.
+Next step: the owner reviews the homepage. After approval, build the guided styling questionnaire form at `/stylist` (MVP priority 3), without the AI call at first.
+
+Open decision for the owner: whether to keep the illustrations or supply licensed fashion photography.
 
 ## 8. Update Rules
 

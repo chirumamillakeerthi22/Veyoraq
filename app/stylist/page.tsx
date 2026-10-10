@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { ComingSoon } from "@/components/coming-soon";
 import { Container } from "@/components/container";
 import { StylistFlow } from "@/components/stylist/stylist-flow";
+import { isStylistConfigured } from "@/lib/stylist/config";
 
 export const metadata: Metadata = {
   title: "Discover Your Style",
@@ -9,6 +11,21 @@ export const metadata: Metadata = {
 };
 
 export default function StylistPage() {
+  // Without an AI key the form could not produce anything, so don't offer it.
+  if (!isStylistConfigured()) {
+    return (
+      <ComingSoon
+        title={
+          <>
+            Discover your style, <em>soon.</em>
+          </>
+        }
+      >
+        The style questionnaire isn&rsquo;t open yet. Check back soon.
+      </ComingSoon>
+    );
+  }
+
   return (
     <Container className="py-12 md:py-20">
       <div className="max-w-2xl">

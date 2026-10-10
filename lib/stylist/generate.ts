@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getGeminiApiKey } from "./config";
 import { buildRequest, instructions } from "./prompt";
 import {
   stylistOutputSchema,
@@ -115,7 +116,7 @@ const WITHHELD_MESSAGE =
 export async function generateOutfits(
   input: StylistInput,
 ): Promise<GenerateResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = getGeminiApiKey();
   const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
 
   if (!apiKey) {

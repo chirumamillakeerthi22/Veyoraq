@@ -108,6 +108,8 @@ Verification (2026-10-10):
 
 NOT verified: cost per request, output quality across many inputs, behaviour on Vercel (the key and variables are only in `.env.local`), real phones, screen readers. Whether Google may use submitted text to improve its products depends on the API plan attached to the key; check that before inviting the public, because the notes field is free text.
 
+Missing-key behaviour (added 2026-10-10): `/stylist` checks `GEMINI_API_KEY` (`lib/stylist/config.ts`) and shows the "coming soon" page instead of the form when it is absent or whitespace-only, so visitors never fill in a form that cannot work. The check runs when the page is built, so a key added in Vercel takes effect after the next deployment. Verified with two production builds: a build with the key overridden by whitespace prerendered the coming-soon page with no form, and a normal build prerendered the form. `npm test` is now 4 files, 47 tests.
+
 Known limitations:
 - No rate limiting. Cost control currently relies on input limits, the token cap and the quota or billing settings of the Gemini API key. A cheap per-visitor limit is needed before wide launch.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.

@@ -32,17 +32,19 @@ Recheck the versions if the environment changes.
 ### Project structure (VERIFIED 2026-10-09)
 
 Application code:
-- `app/layout.tsx` — root layout: fonts, metadata, skip link, announcement strip, shared header and footer.
+- `app/layout.tsx` — root layout: fonts, metadata (including social-sharing tags), skip link, shared header and footer.
 - `app/page.tsx` — VEYORAQ homepage.
-- `app/stylist/page.tsx` — "in development" placeholder that every call to action links to. No questionnaire exists.
+- `app/stylist/page.tsx`, `app/fix-my-style/page.tsx`, `app/account/page.tsx` — "coming soon" placeholders. None of these features exists.
 - `app/globals.css` — Tailwind import, colour and font tokens, focus and reduced-motion rules.
-- `components/` — `site-header.tsx`, `mobile-nav.tsx` (the only client component), `site-footer.tsx`, `button-link.tsx`, `container.tsx`, `editorial-art.tsx`.
-- `lib/navigation.ts` — navigation links shared by header, mobile menu and footer.
+- `components/` — `site-header.tsx`, `mobile-nav.tsx` (the only client component), `site-footer.tsx`, `button-link.tsx`, `container.tsx`, `photo.tsx`, `coming-soon.tsx`.
+- `lib/brand.ts` — brand name, tagline and description in one place.
+- `lib/navigation.ts` — navigation and footer links.
+- `lib/photos.ts` — the photographs used, with their Unsplash sources.
 - `app/favicon.ico`, `public/*.svg` — default template assets, now unused by the pages but left in place.
 
 Configuration:
 - `package.json`, `package-lock.json` — scripts: `dev`, `build`, `start`, `lint`.
-- `next.config.ts` — Tailwind loaded through the Turbopack loader; `cacheComponents`, `partialPrefetching` and experimental `agentFeedback` enabled.
+- `next.config.ts` — Tailwind loaded through the Turbopack loader; `cacheComponents`, `partialPrefetching` and experimental `agentFeedback` enabled; remote images allowed from `images.unsplash.com/photo-*` only.
 - `tsconfig.json` — strict TypeScript, `@/*` path alias to the project root.
 - `eslint.config.mjs` — Next.js core-web-vitals and TypeScript rules.
 - `.gitignore` — ignores `node_modules`, `.next`, `.env*`, `next-env.d.ts`, `*.tsbuildinfo`.
@@ -52,7 +54,7 @@ Documentation: `AGENTS.md`, `claude.md`, `BUILD_GUIDE.md`, `README.md`, `project
 
 Generated, not committed: `node_modules/`, `.next/`, `next-env.d.ts`, `tsconfig.tsbuildinfo`.
 
-Not present: API route handlers, tests, `.env*` files, Supabase or OpenAI code, photography.
+Not present: API route handlers, tests, `.env*` files, Supabase or OpenAI code, authentication.
 
 ## 3. Current Application Status
 
@@ -76,7 +78,40 @@ Note: AGENTS.md warns that this Next.js version has breaking changes. Read the r
 
 Do not describe VEYORAQ as a functioning product; only a static homepage and a placeholder page exist.
 
-### Homepage (built 2026-10-09, awaiting owner review)
+### Homepage, second version (2026-10-10, awaiting owner review)
+
+Rebuilt to the "Style that feels like you." brief. This replaces the first version described further down.
+
+Sections, in order: header, hero, personal styling features (`#features`, with `#hair-studio` and `#shop-your-style` inside it), how it works (`#how-it-works`), editorial showcase, FIX My Style spotlight (`#fix-my-style`), Style Journal preview (`#style-journal`), final call to action, footer.
+
+What changed and why:
+- Photography replaces the SVG illustrations. 12 photos from Unsplash's free library are loaded through `next/image` from `images.unsplash.com` (allowed in `next.config.ts`). IDs, photo pages and photographer handles are recorded in `lib/photos.ts`. `components/editorial-art.tsx` was deleted as unused.
+- The announcement strip was removed: there is nothing genuine to announce.
+- Brand name, tagline and description are centralised in `lib/brand.ts` because the name is provisional.
+- Navigation now has Discover Your Style, FIX My Style, Hair Studio, Style Journal, Shop Your Style and an Account entry. The full menu shows from 1024 px; below that a menu button is used.
+- Seven features are presented with two image-led blocks (Colour Analysis, Hair Studio) and five text-led ones, rather than seven equal cards.
+
+Functional versus placeholder:
+- Functional: navigation, mobile menu, all section links, all buttons, image loading.
+- Placeholder pages (each says the feature is not built and collects nothing): `/stylist`, `/fix-my-style`, `/account`.
+- Not built, and labelled as such on the page: every styling feature, the Journal articles (shown as previews, not links), and the footer entries Saved Styles, Wishlist, About, Contact, Privacy and Terms (shown as text with a "Soon" tag, not links).
+
+Verification on 2026-10-10 (dev server, http://localhost:3000):
+- `npm run lint` — passed. `npx tsc --noEmit` — passed. `npm run build` — passed; `/`, `/_not-found`, `/account`, `/fix-my-style`, `/stylist` prerendered as static.
+- All 12 photos returned HTTP 200 through the Next.js image optimiser.
+- Measured at 1440, 1280, 1024, 768, 430, 375 and 320 px: no horizontal overflow, header content fits, every visible link and button is at least 44 px in both directions, hero headline is two lines.
+- Mobile menu at 375 px: opens, Tab reaches the first link with a visible outline, Escape closes it and returns focus, choosing "Hair Studio" closes it and scrolls to the section below the header.
+- Navigation: FIX My Style button → `/fix-my-style`; "Back to the homepage" → `/`; Account → `/account`; footer Style Journal → `/#style-journal`; hero button → `/stylist`.
+- No browser console errors.
+- Looked at visually (screenshots): every section at about 1024 px wide and the hero at 375 px. Other widths were checked by measurement only.
+
+Not tested: real devices, other browsers, screen readers, a full contrast audit, Lighthouse/performance, the production build in a browser, reduced-motion behaviour, social-share previews.
+
+Known limitations:
+- Photos are hot-linked from Unsplash, so the site depends on Unsplash staying available. Unsplash's licence covers the photographs; it does not include model releases, and the hero and some other photos show people. Review before a public launch.
+- No social-share image and no `metadataBase`, because the site has no public URL yet.
+
+### Homepage, first version (built 2026-10-09, superseded)
 
 Sections implemented, in order: announcement strip, header with navigation, hero, value proposition (`#discover`), how it works (`#how-it-works`), editorial style showcase (`#style-journal`), closing call to action, footer.
 
@@ -142,9 +177,11 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: the owner reviews the homepage. After approval, build the guided styling questionnaire form at `/stylist` (MVP priority 3), without the AI call at first.
+Next step: the owner reviews the homepage. After approval, build the style discovery quiz form at `/stylist` (MVP priority 3), without the AI call at first.
 
-Open decision for the owner: whether to keep the illustrations or supply licensed fashion photography.
+Open decisions for the owner:
+- Whether the chosen Unsplash photos are acceptable, especially those showing people, or should be swapped.
+- Whether to keep hot-linking the photos or download copies into the project before launch.
 
 ## 8. Update Rules
 

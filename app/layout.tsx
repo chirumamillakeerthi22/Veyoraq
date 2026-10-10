@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { brand } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,13 +17,25 @@ const cormorant = Cormorant_Garamond({
   style: ["normal", "italic"],
 });
 
+const title = `${brand.name} · ${brand.tagline}`;
+
 export const metadata: Metadata = {
   title: {
-    default: "VEYORAQ · Style, decoded.",
-    template: "%s · VEYORAQ",
+    default: title,
+    template: `%s · ${brand.name}`,
   },
-  description:
-    "VEYORAQ is a personal styling and fashion discovery platform. Get to know your style, make more of your wardrobe, and discover pieces that feel like you.",
+  description: brand.description,
+  openGraph: {
+    type: "website",
+    siteName: brand.name,
+    title,
+    description: brand.description,
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description: brand.description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -38,9 +51,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <p className="bg-espresso px-4 py-2 text-center text-xs tracking-[0.12em] text-ivory">
-          Your wardrobe. Your style. A little more clarity.
-        </p>
         <SiteHeader />
         <main id="main" className="flex-1">
           {children}

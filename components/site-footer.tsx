@@ -1,42 +1,61 @@
 import Link from "next/link";
 import { Container } from "@/components/container";
-import { navLinks, stylistHref } from "@/lib/navigation";
-
-const footerLinks = [...navLinks, { label: "Find My Style", href: stylistHref }];
+import { brand } from "@/lib/brand";
+import { footerGroups } from "@/lib/navigation";
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-sand bg-ivory">
       <Container className="py-12 md:py-16">
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-          <div>
+        <div className="grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-5">
             <p className="font-display text-2xl font-medium tracking-[0.28em]">
-              VEYORAQ
+              {brand.name}
             </p>
             <p className="mt-2 font-display text-lg italic text-stone">
-              Style, decoded.
+              {brand.tagline}
             </p>
           </div>
 
-          <nav aria-label="Footer">
-            <ul className="flex flex-col gap-1 sm:flex-row sm:gap-8">
-              {footerLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="flex min-h-11 items-center text-sm tracking-wide text-stone transition-colors duration-200 hover:text-espresso"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <nav
+            aria-label="Footer"
+            className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-7"
+          >
+            {footerGroups.map((group) => (
+              <div key={group.title}>
+                <h2 className="text-xs uppercase tracking-[0.22em] text-stone">
+                  {group.title}
+                </h2>
+                <ul className="mt-3">
+                  {group.links.map((link) => (
+                    <li key={link.label}>
+                      {link.href ? (
+                        <Link
+                          href={link.href}
+                          className="flex min-h-11 items-center text-sm transition-colors duration-200 hover:text-stone"
+                        >
+                          {link.label}
+                        </Link>
+                      ) : (
+                        <span className="flex min-h-11 items-center gap-2 text-sm text-stone">
+                          {link.label}
+                          <span className="border border-espresso/20 px-1.5 py-0.5 text-[0.625rem] uppercase tracking-[0.14em]">
+                            Soon
+                          </span>
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
         </div>
 
-        <p className="mt-10 border-t border-sand pt-6 text-xs tracking-wide text-stone">
-          © 2026 VEYORAQ
-        </p>
+        <div className="mt-10 flex flex-col gap-2 border-t border-sand pt-6 text-xs tracking-wide text-stone sm:flex-row sm:justify-between">
+          <p>© 2026 {brand.name}</p>
+          <p>Editorial photography by Unsplash contributors.</p>
+        </div>
       </Container>
     </footer>
   );

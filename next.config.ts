@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  images: {
+    // Only Unsplash photo paths may be loaded as remote images.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/photo-**",
+      },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {

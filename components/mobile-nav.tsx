@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ButtonLink } from "@/components/button-link";
 import { navLinks, stylistHref } from "@/lib/navigation";
 
-// Menu button and drop-down panel shown below the md breakpoint.
+// Menu button and drop-down panel shown below the lg breakpoint.
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -28,7 +28,7 @@ export function MobileNav() {
   const close = () => setOpen(false);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={buttonRef}
         type="button"
@@ -58,7 +58,7 @@ export function MobileNav() {
       <div
         id={panelId}
         hidden={!open}
-        className="absolute inset-x-0 top-full border-b border-sand bg-ivory shadow-lg shadow-espresso/10"
+        className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-sand bg-ivory shadow-lg shadow-espresso/10"
       >
         <nav aria-label="Mobile" className="px-5 pb-6 pt-2 sm:px-8">
           <ul>
@@ -75,7 +75,7 @@ export function MobileNav() {
             ))}
           </ul>
           <ButtonLink href={stylistHref} onClick={close} className="mt-6 w-full">
-            Find My Style
+            Discover My Style
           </ButtonLink>
         </nav>
       </div>

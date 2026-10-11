@@ -31,6 +31,7 @@ Recheck the versions if the environment changes.
 - zod 4.6.5 (added 2026-10-10 for request and AI-output validation)
 - @types/node 24.19.2 (raised from ^20 to match Node 24 and satisfy vitest's peer dependency; types only)
 - vitest 5.0.3 (dev only, added 2026-10-10)
+- @supabase/supabase-js 2.117.3 and @supabase/ssr 0.12.7 (added 2026-10-11 with the owner's approval)
 
 ### Project structure (VERIFIED 2026-10-09; Discover Your Style files added 2026-10-10)
 
@@ -41,7 +42,9 @@ Application code:
 - `app/api/stylist/route.ts` — POST endpoint: same-origin check, size limit, input validation, then the generator.
 - `app/fix-my-style/page.tsx`, `app/account/page.tsx` — "coming soon" placeholders. None of these features exists.
 - `lib/stylist/` — `options.ts` (choices shared by form, schema and prompt), `schema.ts` (zod input and output contracts), `prompt.ts`, `generate.ts` (server-side Gemini `generateContent` call and validation), `fixtures.ts` and `*.test.ts` (tests).
-- `components/stylist/` — `stylist-flow.tsx` (client component: form, loading, error, results), `choice.tsx`, `outfit-results.tsx`.
+- `components/stylist/` — `stylist-flow.tsx` (client component: form, loading, error, results), `choice.tsx`, `outfit-results.tsx`, `outfit-board.tsx`.
+- `lib/supabase/` — `config.ts` (reads and checks the two public settings, refuses secret keys), `client.ts` (browser client; unused so far), `server.ts` (per-request server client; used by the health check), `health.ts` (interprets the connectivity probe) and tests.
+- `app/api/health/supabase/route.ts` — GET connectivity check. Returns only booleans and fixed messages, never the URL or key; rate limited to 20 per 10 minutes per visitor.
 - `app/globals.css` — Tailwind import, colour and font tokens, focus and reduced-motion rules.
 - `components/` — `site-header.tsx`, `mobile-nav.tsx` (the only client component), `site-footer.tsx`, `button-link.tsx`, `container.tsx`, `photo.tsx`, `coming-soon.tsx`.
 - `lib/brand.ts` — brand name, tagline and description in one place.
@@ -63,7 +66,7 @@ Documentation: `AGENTS.md`, `claude.md`, `BUILD_GUIDE.md`, `README.md`, `project
 
 Generated, not committed: `node_modules/`, `.next/`, `next-env.d.ts`, `tsconfig.tsbuildinfo`.
 
-Present but not committed: `.env.local` (git-ignored; holds the Gemini key and the Supabase URL and publishable key). Not present: Supabase code or packages (the Supabase variables are unused so far), authentication, database, product catalogue.
+Present but not committed: `.env.local` (git-ignored; holds the Gemini key and the Supabase URL and publishable key). Not present: authentication, any database table, product catalogue.
 
 ## 3. Current Application Status
 
@@ -136,6 +139,22 @@ Shared protection that must still be configured by the owner in dashboards (NOT 
 Known limitations:
 - Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
+
+### Supabase connection (2026-10-11, branch `supabase-connection`)
+
+What exists: the connection foundation only. No tables, no migrations, no login, no data stored. The owner reported the new Supabase project has no tables and that the project ID matches; this was not independently verified, but the live check below confirms the settings reach a working project.
+
+- `lib/supabase/config.ts` reads `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, requires https (or localhost), and refuses a secret key placed in a public variable (`sb_secret_...` or a JWT whose role is `service_role`).
+- `lib/supabase/client.ts` (browser) and `lib/supabase/server.ts` (per request, cookie aware) follow Supabase's current Next.js guidance. The browser client is not used yet.
+- `/api/health/supabase` probes by reading a table that does not exist. "Table not found" proves the project answered and accepted the key; a 401/403 means the key was rejected; no answer means wrong URL or a paused project.
+- Not built on purpose: `proxy.ts` (Next.js 16's replacement for middleware, which Supabase says refreshes login sessions). It is needed only once login exists.
+
+Verification (2026-10-11):
+- 120 unit tests pass, lint and `tsc` pass.
+- LIVE, local dev server against the owner's real project: `/api/health/supabase` returned HTTP 200 with configured=true, keyKind=publishable, reachable=true, keyAccepted=true.
+- Not yet verified: production. The two `NEXT_PUBLIC_SUPABASE_` variables must exist in Vercel (Production) and a new deployment must be built, because NEXT_PUBLIC values are copied into the build.
+
+Free-tier note: Supabase's free plan can pause inactive projects. A paused project makes the health check report "no answer"; unpausing it in the dashboard fixes that.
 
 ### Homepage, second version (2026-10-10, awaiting owner review)
 
@@ -236,7 +255,7 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: review and merge branch `outfit-visuals` (illustrated outfit boards and shorter text). Set up the Vercel Firewall rule described above. Decide about the notes field and the plan (see "Free tier" below). After that, connect Supabase on a new branch (client files and a connectivity check only; no tables).
+Next step: commit and merge branch `supabase-connection`, add the two Supabase variables to Vercel (Production), redeploy, and open `/api/health/supabase` on the live site. After that, design login and Saved Styles: show the proposed tables and security policies for approval before anything is applied to the database.
 
 State of production (verified 2026-10-11): PR #2 is merged and deployed; `GEMINI_API_KEY` is set for the Production environment; `/stylist` shows the form and a real request returned three outfits.
 

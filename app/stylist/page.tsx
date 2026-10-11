@@ -36,9 +36,8 @@ export default function StylistPage() {
           Tell us a little, <em>get ideas.</em>
         </h1>
         <p className="mt-5 leading-7 text-stone">
-          Answer a few questions and we&rsquo;ll suggest up to three outfit
-          ideas. They are style concepts only: we don&rsquo;t check prices,
-          brands or availability yet. We don&rsquo;t save your answers.
+          Answer a few questions for up to three outfit ideas. Concepts only: no
+          products or prices, and nothing is saved.
         </p>
       </div>
       <div className="mt-12">

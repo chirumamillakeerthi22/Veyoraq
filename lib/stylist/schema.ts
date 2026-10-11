@@ -51,16 +51,22 @@ const text = (max: number) =>
       "Must not contain prices, links or offers",
     );
 
+const hexColour = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+/*
+  Text is kept short on purpose: the results are shown mostly as a picture.
+  The prompt asks for less than these limits; the limits only catch runaways.
+*/
 export const outfitSchema = z
   .object({
-    name: text(60),
-    summary: text(200),
+    name: text(50),
+    summary: text(120),
     palette: z
       .array(
         z
           .object({
             name: text(30),
-            hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+            hex: hexColour,
           })
           .strict(),
       )
@@ -71,15 +77,17 @@ export const outfitSchema = z
         z
           .object({
             category: z.enum(pieceCategoryValues),
-            description: text(140),
-            colour: text(40),
+            description: text(70),
+            colour: text(30),
+            // Drives the colour of this piece in the illustrated outfit board.
+            hex: hexColour,
           })
           .strict(),
       )
       .min(3)
       .max(6),
-    whyItWorks: text(400),
-    stylingTip: text(200),
+    whyItWorks: text(180),
+    stylingTip: text(120),
   })
   .strict();
 

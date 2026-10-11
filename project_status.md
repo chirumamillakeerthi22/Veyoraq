@@ -110,8 +110,19 @@ NOT verified: cost per request, output quality across many inputs, behaviour on 
 
 Missing-key behaviour (added 2026-10-10): `/stylist` checks `GEMINI_API_KEY` (`lib/stylist/config.ts`) and shows the "coming soon" page instead of the form when it is absent or whitespace-only, so visitors never fill in a form that cannot work. The check runs when the page is built, so a key added in Vercel takes effect after the next deployment. Verified with two production builds: a build with the key overridden by whitespace prerendered the coming-soon page with no form, and a normal build prerendered the form. `npm test` is now 4 files, 47 tests.
 
+Rate limiting (added 2026-10-11, `lib/stylist/rate-limit.ts`, applied in `app/api/stylist/route.ts`):
+- Per visitor (by IP address): 8 requests per 10 minutes and 40 per 24 hours. The 9th request in a window gets HTTP 429 with a `Retry-After` header and a message saying how long to wait. Only well-formed requests that would reach the AI count; invalid requests and refused requests do not use allowance or extend the wait.
+- It is in memory only: no database, no tables, no new service. Memory is bounded (least recently used visitors are dropped beyond 5,000).
+- It is BEST EFFORT. On Vercel, counters live in one server instance, several instances can run at once and instances restart, so a determined caller can exceed it. It is a first layer, not a guarantee.
+- The visitor's IP comes from `x-vercel-forwarded-for`, then `x-forwarded-for`, then `x-real-ip`. Vercel's documentation says the platform sets and overwrites these, so clients cannot spoof them there. Locally and on any other host they can be spoofed.
+- Verified: 66 unit tests pass (limiter, IP extraction, route behaviour). A real production build (`next start` on port 3100, key blanked so no AI call could be made) returned 8 responses then HTTP 429 with `Retry-After: 600`, a second visitor was unaffected, and an invalid request from a refused visitor returned 400.
+
+Shared protection that must still be configured by the owner in dashboards (NOT done, because it cannot be done from code):
+1. Vercel Firewall rate-limit rule. Vercel's documentation says WAF rate limiting is available on all plans, with one rule on Hobby, a fixed window of 10 s to 10 min, and counting by IP. Counters are per region. Suggested rule: path equals `/api/stylist`, method POST, limit 10 requests per 60 seconds per IP, action default (429). Dashboard: project > Firewall > Configure > New Rule > Then: Rate Limit, then Publish.
+2. A quota or spending cap on the Gemini API key, so the worst case is bounded whatever the traffic.
+
 Known limitations:
-- No rate limiting. Cost control currently relies on input limits, the token cap and the quota or billing settings of the Gemini API key. A cheap per-visitor limit is needed before wide launch.
+- Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
 
 ### Homepage, second version (2026-10-10, awaiting owner review)
@@ -213,7 +224,7 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: review, commit and open a PR for `discover-your-style`. Before deploying it, add `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`) to Vercel's environment variables and confirm the key's plan and quota.
+Next step: merge PR #2 (it carries the questionnaire, the missing-key check and the rate limiter). `GEMINI_API_KEY` is reported to be set in Vercel already, so the form goes live on the next deployment. Set up the Vercel Firewall rule and the Gemini quota described above. After that, connect Supabase on a new branch (client files and a connectivity check only; no tables).
 
 Open decisions for the owner:
 - Whether to keep the default model `gemini-3.5-flash-lite` (cheapest) or set `GEMINI_MODEL` to a stronger one such as `gemini-3.8-flash`, after comparing quality and cost.

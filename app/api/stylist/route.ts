@@ -1,4 +1,9 @@
 import { generateOutfits } from "@/lib/stylist/generate";
+import {
+  clientKey,
+  describeWait,
+  stylistLimiter,
+} from "@/lib/stylist/rate-limit";
 import { stylistInputSchema, type StylistErrorCode } from "@/lib/stylist/schema";
 import { z } from "zod";
 
@@ -24,10 +29,14 @@ function errorResponse(
   code: StylistErrorCode,
   message: string,
   extra?: Record<string, unknown>,
+  headers?: Record<string, string>,
 ) {
   return Response.json(
     { error: { code, message, ...extra } },
-    { status: statusByCode[code], headers: { "Cache-Control": "no-store" } },
+    {
+      status: statusByCode[code],
+      headers: { "Cache-Control": "no-store", ...headers },
+    },
   );
 }
 
@@ -65,6 +74,17 @@ export async function POST(request: Request) {
       "invalid_input",
       "Please check your answers and try again.",
       { fields: z.flattenError(parsed.error).fieldErrors },
+    );
+  }
+
+  // Only well-formed requests that would reach the AI count against a visitor's allowance.
+  const limit = stylistLimiter.check(clientKey(request));
+  if (!limit.allowed) {
+    return errorResponse(
+      "rate_limited",
+      `You've asked for a lot of outfit ideas. Please try again in ${describeWait(limit.retryAfterSeconds)}.`,
+      { retryAfterSeconds: limit.retryAfterSeconds },
+      { "Retry-After": String(limit.retryAfterSeconds) },
     );
   }
 

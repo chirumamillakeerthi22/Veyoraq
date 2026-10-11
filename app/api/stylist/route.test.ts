@@ -5,6 +5,7 @@ const generateOutfits = vi.fn();
 vi.mock("@/lib/stylist/generate", () => ({ generateOutfits }));
 
 const { POST } = await import("./route");
+const { stylistLimiter } = await import("@/lib/stylist/rate-limit");
 
 function post(body: unknown, headers: Record<string, string> = {}) {
   return POST(
@@ -17,7 +18,10 @@ function post(body: unknown, headers: Record<string, string> = {}) {
 }
 
 describe("POST /api/stylist", () => {
-  beforeEach(() => generateOutfits.mockReset());
+  beforeEach(() => {
+    generateOutfits.mockReset();
+    stylistLimiter.reset();
+  });
 
   it("returns outfits for a valid request", async () => {
     generateOutfits.mockResolvedValue({ ok: true, data: validOutput });
@@ -59,6 +63,40 @@ describe("POST /api/stylist", () => {
     generateOutfits.mockResolvedValue({ ok: true, data: validOutput });
     const response = await post(validInput, { origin: "https://veyoraq.test" });
     expect(response.status).toBe(200);
+  });
+
+  describe("rate limiting", () => {
+    const ip = (address: string) => ({ "x-forwarded-for": address });
+
+    it("refuses the ninth request in ten minutes with 429 and Retry-After", async () => {
+      generateOutfits.mockResolvedValue({ ok: true, data: validOutput });
+      for (let i = 0; i < 8; i += 1) {
+        expect((await post(validInput, ip("203.0.113.7"))).status).toBe(200);
+      }
+      const response = await post(validInput, ip("203.0.113.7"));
+      expect(response.status).toBe(429);
+      expect(Number(response.headers.get("retry-after"))).toBeGreaterThan(0);
+      const body = await response.json();
+      expect(body.error.code).toBe("rate_limited");
+      expect(body.error.message).toMatch(/try again in/i);
+      expect(generateOutfits).toHaveBeenCalledTimes(8);
+    });
+
+    it("limits each visitor separately", async () => {
+      generateOutfits.mockResolvedValue({ ok: true, data: validOutput });
+      for (let i = 0; i < 8; i += 1) await post(validInput, ip("203.0.113.7"));
+      expect((await post(validInput, ip("203.0.113.7"))).status).toBe(429);
+      expect((await post(validInput, ip("198.51.100.9"))).status).toBe(200);
+    });
+
+    it("does not count invalid requests against the allowance", async () => {
+      generateOutfits.mockResolvedValue({ ok: true, data: validOutput });
+      for (let i = 0; i < 20; i += 1) {
+        const bad = await post({ ...validInput, styles: [] }, ip("203.0.113.7"));
+        expect(bad.status).toBe(400);
+      }
+      expect((await post(validInput, ip("203.0.113.7"))).status).toBe(200);
+    });
   });
 
   it.each([

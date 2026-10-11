@@ -3,7 +3,7 @@ import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
 import { Photo } from "@/components/photo";
 import { brand } from "@/lib/brand";
-import { fixMyStyleHref, stylistHref } from "@/lib/navigation";
+import { exploreHref, fixMyStyleHref, shopHref, stylistHref } from "@/lib/navigation";
 import type { PhotoName } from "@/lib/photos";
 
 const steps = [
@@ -110,40 +110,6 @@ function SoonTag() {
 const sectionHeading =
   "mt-4 font-display text-4xl leading-[1.08] md:text-5xl lg:text-6xl";
 
-type FeatureProps = {
-  number: string;
-  title: string;
-  children: React.ReactNode;
-  id?: string;
-  link?: { label: string; href: string };
-};
-
-// A text-led feature. The image-led features are laid out individually below.
-function Feature({ number, title, children, id, link }: FeatureProps) {
-  return (
-    <li
-      id={id}
-      className="scroll-mt-24 border-t border-espresso/20 pt-6 lg:scroll-mt-28"
-    >
-      <p aria-hidden="true" className="font-display text-xl italic text-olive">
-        {number}
-      </p>
-      <h3 className="mt-3 font-display text-2xl md:text-[1.75rem] md:leading-9">
-        {title}
-      </h3>
-      <p className="mt-3 leading-7 text-stone">{children}</p>
-      {link && (
-        <Link
-          href={link.href}
-          className="mt-2 inline-flex min-h-11 items-center border-b border-espresso/40 text-sm tracking-wide transition-colors duration-200 hover:border-espresso"
-        >
-          {link.label}
-        </Link>
-      )}
-    </li>
-  );
-}
-
 export default function Home() {
   return (
     <>
@@ -179,7 +145,7 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* Personal styling features */}
+      {/* Featured styling services: a short, curated selection. The full list lives at /explore. */}
       <section
         id="features"
         aria-labelledby="features-heading"
@@ -187,115 +153,54 @@ export default function Home() {
       >
         <Container className="py-16 md:py-24 lg:py-32">
           <div className="max-w-3xl">
-            <Eyebrow>What we&rsquo;re building</Eyebrow>
+            <Eyebrow>Featured services</Eyebrow>
             <h2 id="features-heading" className={sectionHeading}>
-              Everything you need to dress like yourself.
+              Start with what feels <em>most like you.</em>
             </h2>
-            <p className="mt-6 max-w-xl leading-7 text-stone">
-              {brand.name} is in development. These are the tools we&rsquo;re
-              designing; none of them is available to use yet.
-            </p>
           </div>
 
-          {/* 01: image-led */}
-          <div className="mt-12 grid gap-8 md:mt-20 lg:grid-cols-12 lg:items-end lg:gap-16">
-            <Photo
-              name="colour"
-              sizes="(min-width: 1024px) 55vw, 100vw"
-              className="aspect-[4/3] lg:col-span-7"
-            />
-            <div className="lg:col-span-5 lg:pb-4">
-              <p
-                aria-hidden="true"
-                className="font-display text-xl italic text-olive"
-              >
-                01
-              </p>
-              <h3 className="mt-3 font-display text-3xl md:text-4xl">
-                Colour Analysis
-              </h3>
-              <p className="mt-4 text-lg leading-8 text-stone">
-                Explore personal colour palettes built around the shades you
-                love and feel good in. Your palette will go on to inform the
-                outfit ideas you see.
-              </p>
-              <div className="mt-6">
-                <SoonTag />
+          <ul className="mt-10 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-12">
+            <li>
+              <Link href={stylistHref} className="group block">
+                <Photo
+                  name="colour"
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="aspect-[4/5]"
+                />
+                <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">Available</p>
+                <h3 className="mt-2 font-display text-3xl">Discover Your Style</h3>
+                <p className="mt-2 leading-7 text-stone">
+                  A short quiz that turns your taste, colours and occasions into outfit ideas.
+                </p>
+              </Link>
+            </li>
+            <li>
+              <div>
+                <Photo
+                  name="hair"
+                  sizes="(min-width: 768px) 33vw, 100vw"
+                  className="aspect-[4/5]"
+                />
+                <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">Coming soon</p>
+                <h3 className="mt-2 font-display text-3xl">Hair Studio</h3>
+                <p className="mt-2 leading-7 text-stone">
+                  Hairstyle inspiration shaped by your preferences and how much upkeep you want.
+                </p>
               </div>
-            </div>
-          </div>
-
-          {/* 02–04: text-led */}
-          <ul className="mt-16 grid gap-10 md:mt-24 md:grid-cols-3 md:gap-8 lg:gap-14">
-            <Feature number="02" title="Body Profile and Fit Guidance">
-              Share measurements and fit preferences if you&rsquo;d like to;
-              it&rsquo;s always optional. They&rsquo;ll help shape silhouette
-              and clothing suggestions, offered as guidance rather than rules.
-            </Feature>
-            <Feature
-              number="03"
-              title="Style Discovery"
-              link={{ label: "About the quiz", href: stylistHref }}
-            >
-              A short quiz to explore the aesthetics, prints, textures and
-              silhouettes you&rsquo;re drawn to.
-            </Feature>
-            <Feature
-              number="04"
-              title="FIX My Style"
-              link={{ label: "See how it will work", href: "/#fix-my-style" }}
-            >
-              Add pieces from your own wardrobe and explore new outfit
-              combinations with what you already have.
-            </Feature>
-          </ul>
-
-          {/* 05: image-led, mirrored */}
-          <div
-            id="hair-studio"
-            className="mt-16 grid scroll-mt-24 gap-8 md:mt-24 md:grid-cols-12 md:items-center md:gap-10 lg:scroll-mt-28 lg:gap-16"
-          >
-            <div className="md:order-2 md:col-span-5 md:col-start-8">
-              <Photo
-                name="hair"
-                sizes="(min-width: 768px) 40vw, 100vw"
-                className="aspect-[4/5]"
-              />
-            </div>
-            <div className="md:order-1 md:col-span-6 md:col-start-1 md:row-start-1">
-              <p
-                aria-hidden="true"
-                className="font-display text-xl italic text-olive"
-              >
-                05
+            </li>
+            <li className="flex flex-col justify-end border-t border-espresso/20 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0 lg:pl-12">
+              <p aria-hidden="true" className="font-display text-xl italic text-olive">
+                and more
               </p>
-              <h3 className="mt-3 font-display text-3xl md:text-4xl">
-                Hair Studio
-              </h3>
-              <p className="mt-4 max-w-lg text-lg leading-8 text-stone">
-                Hairstyle inspiration shaped by your preferences, your
-                hair&rsquo;s characteristics and how much upkeep you want.
+              <h3 className="mt-3 font-display text-3xl">The full collection.</h3>
+              <p className="mt-2 leading-7 text-stone">
+                FIX My Style, the Journal, colour and fit guidance. See what is ready and what is
+                on its way.
               </p>
-              <div className="mt-6">
-                <SoonTag />
-              </div>
-            </div>
-          </div>
-
-          {/* 06–07: text-led */}
-          <ul className="mt-16 grid gap-10 md:mt-24 md:grid-cols-2 md:gap-8 lg:gap-14">
-            <Feature id="shop-your-style" number="06" title="Shop Your Style">
-              Explore clothing recommendations based on your preferences and a
-              budget you choose.
-            </Feature>
-            <Feature
-              number="07"
-              title="Style Journal"
-              link={{ label: "Preview the Journal", href: "/#style-journal" }}
-            >
-              Curated looks and practical guides, from Effortless Everyday to
-              Modern Minimal and Elevated Occasion.
-            </Feature>
+              <ButtonLink href={exploreHref} variant="secondary" className="mt-6 w-full sm:w-auto">
+                Explore all services
+              </ButtonLink>
+            </li>
           </ul>
         </Container>
       </section>
@@ -334,20 +239,25 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* Editorial style showcase */}
-      <section aria-labelledby="looks-heading">
+      {/* Shop the Look: editorial looks that lead into Shop. They are inspiration, not products. */}
+      <section id="shop-the-look" aria-labelledby="looks-heading" className="scroll-mt-16 lg:scroll-mt-20">
         <Container className="py-16 md:py-24 lg:py-32">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
             <div>
-              <Eyebrow>The edit</Eyebrow>
+              <Eyebrow>Shop the Look</Eyebrow>
               <h2 id="looks-heading" className={sectionHeading}>
-                Three moods to explore.
+                Three moods, <em>ready to shop.</em>
               </h2>
             </div>
-            <p className="max-w-xs text-sm leading-6 text-stone">
-              Editorial inspiration only. These images are not products for
-              sale.
-            </p>
+            <div className="max-w-xs">
+              <p className="text-sm leading-6 text-stone">
+                Editorial inspiration only. These images are not products for sale, and Shop
+                has no products connected yet.
+              </p>
+              <ButtonLink href={shopHref} variant="secondary" className="mt-4 w-full sm:w-auto">
+                Go to Shop
+              </ButtonLink>
+            </div>
           </div>
           <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:mt-16 md:grid-cols-12 md:items-start md:gap-x-8 lg:gap-x-12">
             {looks.map((look, index) => (

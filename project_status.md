@@ -367,6 +367,21 @@ Open decisions for the owner:
 - Whether the chosen Unsplash photos are acceptable, especially those showing people, or should be swapped.
 - Whether to keep hot-linking the photos or download copies into the project before launch.
 
+### Top navigation, Explore, Shop and homepage sections (branch `login-and-saved-styles`, uncommitted)
+
+The briefly built desktop sidebar was replaced by the requested top navigation. The phone drawer was kept and reused.
+
+- Top bar (md and up): VEYORAQ logo (links to `/`, no separate Home), Explore, Shop, Saved (full name "Saved Styles" for screen readers), Wishlist, and an Account icon. Below md: logo plus a menu button opening a drawer with the same destinations and the account section.
+- Account menu: signed out shows Sign in, Sign up, Settings; signed in shows the email, My account, Settings, Sign out. Settings itself already shows a sign-in prompt to signed-out visitors.
+- New `/explore`: directory of services. Only services with a real page link out (Discover Your Style `/stylist`, FIX My Style `/fix-my-style`, Style Journal `/#style-journal`); Hair Studio, Colour Analysis and Fit guidance are shown as "Coming soon" with no link.
+- New `/shop`: honest placeholder. There is NO product catalogue, no products and no cart or checkout; it explains how Shop will work and links to Discover My Style and the Wishlist.
+- Homepage: hero unchanged. The all-seven-services list became "Featured services" (Discover Your Style, Hair Studio, and a link to Explore). "The edit" became "Shop the Look" (editorial photos, labelled as not products, with a Go to Shop button). How it works, FIX My Style and Style Journal sections kept.
+- Footer "Explore" links updated to the new destinations. No Supabase, environment, authentication or API changes. Removed my own unused `components/sidebar/site-sidebar.tsx`; `components/sidebar/sidebar-content.tsx` is now the phone drawer's content.
+
+Verified (2026-10-11): `tsc --noEmit`, `eslint`, `vitest` (24 files, 344 tests) and `next build` pass. In a browser against the production build: header links and hrefs at 1280px; active item correct on /explore, /stylist (Explore), /shop, /saved, /wishlist; signed-out account menu stays inside the viewport and lists Sign in, Sign up, Settings; no horizontal scroll at 1280, 768 and 375px; drawer opens with focus on Close menu and lists Explore, Shop, Saved Styles, Wishlist and the account row.
+
+Not verified: the signed-in account menu (no test account was signed in); keyboard Tab order and screen reader by hand; the drawer link navigation in this round (it reuses the code verified last round).
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

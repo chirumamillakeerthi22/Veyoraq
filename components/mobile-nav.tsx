@@ -1,43 +1,55 @@
 "use client";
 
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { ButtonLink } from "@/components/button-link";
-import { collectionLinks, navLinks, stylistHref } from "@/lib/navigation";
+import { SidebarContent } from "@/components/sidebar/sidebar-content";
 
-// Menu button and drop-down panel shown below the lg breakpoint.
+/*
+  The phone navigation (below md): a menu button and a slide-in drawer holding the
+  same destinations as the top bar. It uses a native <dialog>, which gives a real focus trap,
+  Escape to close, a dimmed backdrop, and returns focus to the button on close.
+*/
 export function MobileNav() {
-  const [open, setOpen] = useState(false);
-  const panelId = useId();
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  // Remembering WHERE it was opened means moving to another page closes it by itself.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
 
   useEffect(() => {
-    if (!open) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-        buttonRef.current?.focus();
-      }
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // showModal() focuses the first link; start on the close button instead.
+      dialog.querySelector<HTMLElement>("[data-initial-focus]")?.focus();
     }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  const close = () => setOpen(false);
+  // Keep the page behind the drawer from scrolling.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = previous;
+    };
+  }, [open]);
+
+  const close = () => setOpenOn(null);
 
   return (
-    <div className="lg:hidden">
+    <div className="md:hidden">
       <button
-        ref={buttonRef}
         type="button"
+        aria-haspopup="dialog"
         aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpenOn(pathname)}
         className="-mr-2 flex h-11 w-11 items-center justify-center"
       >
-        <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
+        <span className="sr-only">Open menu</span>
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
@@ -47,51 +59,52 @@ export function MobileNav() {
           strokeWidth="1.5"
           strokeLinecap="round"
         >
-          {open ? (
-            <path d="M6 6l12 12M18 6L6 18" />
-          ) : (
-            <path d="M4 8h16M4 16h16" />
-          )}
+          <path d="M4 8h16M4 16h16" />
         </svg>
       </button>
 
-      <div
-        id={panelId}
-        hidden={!open}
-        className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-sand bg-ivory shadow-lg shadow-espresso/10"
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={titleId}
+        onClose={close}
+        onClick={(event) => {
+          // A click on the dimmed area outside the panel lands on the dialog itself.
+          if (event.target === event.currentTarget) close();
+        }}
+        className="drawer-panel m-0 h-dvh max-h-none w-[min(20rem,88vw)] max-w-none overflow-visible border-r border-sand bg-ivory p-0 text-espresso backdrop:bg-espresso/40"
       >
-        <nav aria-label="Mobile" className="px-5 pb-6 pt-2 sm:px-8">
-          <ul>
-            {navLinks.map((link) => (
-              <li key={link.href} className="border-b border-sand">
-                <Link
-                  href={link.href}
+        {open && (
+          <>
+            <h2 id={titleId} className="sr-only">
+              Menu
+            </h2>
+            <SidebarContent
+              onNavigate={close}
+              closeButton={
+                <button
+                  type="button"
                   onClick={close}
-                  className="flex min-h-14 items-center font-display text-2xl"
+                  data-initial-focus
+                  className="-mr-2 -mt-2 flex h-11 w-11 items-center justify-center"
                 >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <ul className="border-b border-sand">
-            {collectionLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={close}
-                  className="flex min-h-12 items-center text-base"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <ButtonLink href={stylistHref} onClick={close} className="mt-6 w-full">
-            Discover My Style
-          </ButtonLink>
-        </nav>
-      </div>
+                  <span className="sr-only">Close menu</span>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              }
+            />
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

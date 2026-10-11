@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ButtonLink } from "@/components/button-link";
-import { navLinks, stylistHref } from "@/lib/navigation";
+import { collectionLinks, navLinks, stylistHref } from "@/lib/navigation";
 
 // Menu button and drop-down panel shown below the lg breakpoint.
 export function MobileNav() {
@@ -68,6 +68,19 @@ export function MobileNav() {
                   href={link.href}
                   onClick={close}
                   className="flex min-h-14 items-center font-display text-2xl"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <ul className="border-b border-sand">
+            {collectionLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={close}
+                  className="flex min-h-12 items-center text-base"
                 >
                   {link.label}
                 </Link>

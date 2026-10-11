@@ -69,11 +69,13 @@ async function AccountContent({
       <p className="text-sm text-stone">Signed in as</p>
       <p className="mt-1 break-words text-xl">{user.email ?? "your account"}</p>
       <p className="mt-1 text-sm text-stone">Signed in with {provider}.</p>
-      <p className="mt-6 leading-7 text-stone">
-        Saving outfits to your account is coming next.
-      </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/stylist">Discover my style</ButtonLink>
+        <ButtonLink href="/saved">My saved looks</ButtonLink>
+        <ButtonLink href="/stylist" variant="secondary">
+          Discover my style
+        </ButtonLink>
+      </div>
+      <div className="mt-3">
         <SignOutButton />
       </div>
     </div>

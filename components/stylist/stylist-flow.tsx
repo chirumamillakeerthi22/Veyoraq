@@ -173,7 +173,20 @@ export function StylistFlow() {
           </p>
         </div>
         <div className="mt-10">
-          <OutfitResults outfits={view.outfits} />
+          <OutfitResults
+            outfits={view.outfits}
+            answers={
+              answers.occasion && answers.budgetTier
+                ? {
+                    occasion: answers.occasion,
+                    styles: answers.styles,
+                    colours: answers.colours,
+                    budgetTier: answers.budgetTier,
+                    currency: answers.currency,
+                  }
+                : null
+            }
+          />
         </div>
         <div className="mt-12 flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={generate} className={primaryButton}>

@@ -32,7 +32,7 @@ export const footerGroups: {
   },
   {
     title: "Your style",
-    links: [{ label: "Saved Styles" }, { label: "Wishlist" }],
+    links: [{ label: "Saved Styles", href: "/saved" }, { label: "Wishlist" }],
   },
   {
     title: "Company",

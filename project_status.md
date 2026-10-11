@@ -140,7 +140,26 @@ Known limitations:
 - Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
 
-### Sign in with Email and Continue with Google (2026-10-11, local branch `login-and-saved-styles`, uncommitted)
+### Save this look and Saved Styles (2026-10-11, branch `login-and-saved-styles`, PR #5)
+
+The owner approved the `saved_outfits` table as proposed and ran the SQL in the Supabase SQL Editor (the assistant has only the public key and no database administrator access).
+
+DATABASE, VERIFIED 2026-10-11:
+- The owner ran `supabase/tests/saved_outfits_security_test.sql` after the migration. Supabase returned: "ALL SECURITY TESTS PASSED (10 of 10). Nothing was saved: this script always rolls back." (The red "error" is the deliberate rollback.) The 10 checks: own save works; own read works; saving as another user is refused; editing is refused; an outfit over 8 KB is refused; the 100-outfit limit applies; another user sees none of the rows; another user cannot delete them; a signed-out visitor cannot read; the owner's 100 rows were intact.
+- Independent check with the public key only: before the migration `saved_outfits` returned PGRST205 (table not found); after, the same request returns 42501 (permission denied). Signed-out read, insert and delete are all refused with HTTP 401.
+- Still not exercised from the app: saving, listing and deleting with a real signed-in user.
+
+Built and unit tested:
+- "Save this look" on each result card. A signed-out visitor is told to sign in (the link opens in a new tab so the results stay on the page); no Supabase request is made for them. A signed-in visitor's save inserts one row (name, validated outfit, and the five questionnaire choices; the free-text notes are never stored). The user id is filled in by the database, never sent by the browser.
+- `/saved` (listed in the footer and on `/account`) shows the signed-in visitor's looks, newest first, with a confirm-then-remove button. Rows are re-validated when read; invalid rows are skipped.
+- Friendly messages: table missing ("Saving isn't available yet"), not signed in, the 100-outfit limit, and a generic fallback. Raw database text is never shown.
+- Shared `OutfitCard` component used by results and saved pages.
+
+Verification: 216 unit tests, lint, `tsc` and production build pass (`/saved` is partially prerendered). Real browser at 390 px with only the AI call stubbed: results show Save buttons and a signed-out press shows the sign-in note with a new-tab link and makes no Supabase request.
+
+NOT verified: saving, listing and deleting from the app with a real signed-in user, and the signed-in `/saved` page. These need a real sign-in (an email code or Google), which only the owner can complete. The database rules themselves are verified above.
+
+### Sign in with Email and Continue with Google (2026-10-11, PR #5)
 
 Both methods are implemented in code and unit tested. They are NOT yet usable end to end, because the dashboard setup below has not been done. Nothing is stored in the database by this work: sign-in only creates a Supabase Auth user.
 
@@ -159,7 +178,7 @@ NOT verified end to end: a real Google sign-in, a real email code arriving, and 
 State of the project's Supabase Auth settings when checked (public settings endpoint): `email` provider enabled, `google` NOT enabled, sign-ups allowed, email confirmation required (`mailer_autoconfirm` false).
 
 Owner setup still required:
-1. Email delivery. Supabase's built-in sender delivers only to team members, at 2 emails per hour, and is not for production. Real visitors need a custom SMTP provider (Authentication > Emails/SMTP). Until then, email sign-in works only for addresses that are members of the Supabase project team.
+1. Email delivery. Supabase's built-in sender delivers only to team members, at 2 emails per hour, and is not for production. Real visitors need a custom SMTP provider (Authentication > Emails/SMTP). Until then, email sign-in works only for addresses that are members of the Supabase project team. The owner has no domain-based email address yet. Stopgap without a domain: a dedicated Gmail account with 2-Step Verification and an App Password used as the SMTP login (smtp.gmail.com, port 465 or 587). Google documents a limit of 500 emails per day for the account and says app passwords are not recommended in most cases; they are not available for work/school or Advanced Protection accounts. Replace with a domain-based SMTP provider when a domain exists.
 2. Email template. The Magic Link and Confirm sign up templates must include `{{ .Token }}` (the code) and the link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/account`.
 3. Google. Create an OAuth client in Google Cloud, enter its client ID and secret under Authentication > Providers > Google, and add the Supabase callback URL to Google's authorised redirect URIs.
 4. URLs. In Supabase Authentication > URL Configuration set the Site URL to https://veyoraq.vercel.app and add http://localhost:3000/** and https://veyoraq.vercel.app/** to the redirect allow-list.
@@ -302,7 +321,7 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: the owner completes the sign-in dashboard setup (see "Sign in with Email and Continue with Google"), commits and merges the sign-in work, and approves or changes the proposed `saved_outfits` table and rules (see "Login and Saved Styles: DESIGN ONLY"). Only then is the SQL applied through the Supabase SQL Editor and the Save button and `/saved` page built.
+Next step: the owner signs in once with the email address of the Supabase account (the built-in sender can deliver to project team members, so this works without SMTP), then saves a look and opens `/saved` locally to confirm the full flow. The owner sets up custom SMTP (see the sign-in section) so other visitors can receive codes. Then PR #5 is merged.
 
 State of production (verified 2026-10-11): PR #2 is merged and deployed; `GEMINI_API_KEY` is set for the Production environment; `/stylist` shows the form and a real request returned three outfits.
 

@@ -140,6 +140,52 @@ Known limitations:
 - Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
 
+### Sign in with Email and Continue with Google (2026-10-11, local branch `login-and-saved-styles`, uncommitted)
+
+Both methods are implemented in code and unit tested. They are NOT yet usable end to end, because the dashboard setup below has not been done. Nothing is stored in the database by this work: sign-in only creates a Supabase Auth user.
+
+What exists:
+- `/account` shows both options side by side. Signed in, it shows the email, how they signed in, and a sign-out button.
+- Email: the visitor enters an address, receives a 6-digit code (and a link), and enters the code. No password. `signInWithOtp` creates the account on first use; `verifyOtp` checks the code. The email link goes to `/auth/confirm` (token-hash check on the server, which works across browsers).
+- Google: `signInWithOAuth`, returning to `/auth/callback`, which exchanges the code for a session.
+- `proxy.ts` refreshes sessions, limited to `/account`, `/saved/*` and `/auth/*`, so the homepage and stylist are untouched.
+- `/account` reads Supabase's public settings endpoint and shows "being set up" for a method that is switched off, instead of sending a visitor to a raw error page.
+- Safety: the "next" page is restricted to paths on this site (no open redirect); only the link types `email`, `magiclink` and `signup` are accepted; raw error text from Supabase is never shown; failures redirect to `/account?error=...` with a friendly notice.
+
+Verification (2026-10-11): 194 unit tests, lint, `tsc` and production build pass. In the real browser at 390 px: both options render, Google shows the "being set up" note, invalid email and short code are caught without any request, a sent code moves to the code step with a 60 s resend timer, an expired code shows a friendly message, and "use a different email" returns to the email step. The send and verify network calls were stubbed in that test, so no real email was sent and no user was created. The two landing routes were probed with bogus values against the real project and all failed safely, including a hostile "next" value.
+
+NOT verified end to end: a real Google sign-in, a real email code arriving, and a real session being created. These need the owner's dashboard setup and a human to sign in.
+
+State of the project's Supabase Auth settings when checked (public settings endpoint): `email` provider enabled, `google` NOT enabled, sign-ups allowed, email confirmation required (`mailer_autoconfirm` false).
+
+Owner setup still required:
+1. Email delivery. Supabase's built-in sender delivers only to team members, at 2 emails per hour, and is not for production. Real visitors need a custom SMTP provider (Authentication > Emails/SMTP). Until then, email sign-in works only for addresses that are members of the Supabase project team.
+2. Email template. The Magic Link and Confirm sign up templates must include `{{ .Token }}` (the code) and the link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/account`.
+3. Google. Create an OAuth client in Google Cloud, enter its client ID and secret under Authentication > Providers > Google, and add the Supabase callback URL to Google's authorised redirect URIs.
+4. URLs. In Supabase Authentication > URL Configuration set the Site URL to https://veyoraq.vercel.app and add http://localhost:3000/** and https://veyoraq.vercel.app/** to the redirect allow-list.
+5. A Privacy page before public sign-in (the footer link is still "Soon").
+
+### Login and Saved Styles: DESIGN ONLY (2026-10-11, branch `saved-styles-design`) — PROPOSED, NOT APPLIED
+
+Nothing described here exists in the database. The two SQL files are proposals saved in the repository for review; saving them changes nothing in Supabase.
+
+- `supabase/migrations/20261011120000_saved_outfits.sql` — proposed migration (one table).
+- `supabase/tests/saved_outfits_security_test.sql` — proposed security test; it always rolls back. UNVERIFIED: it has not been run, because the table does not exist and the assistant has no database administrator access.
+
+Findings that shaped the design (from Supabase's documentation, 2026-10-11):
+- Supabase's built-in email sender delivers only to the project's team members, at 2 emails per hour, and is described as not for production. Email or magic-link login would need a custom email provider and a sending domain, which the project does not have.
+- Sign in with Google needs no email sending. Its setup needs an OAuth client in Google Cloud, the client ID and secret entered in Supabase, and redirect URLs configured. Whether Google sign-in has any Supabase plan limit was not stated in the documentation read and must be checked on Supabase's pricing page.
+
+Proposed table `public.saved_outfits`: `id`, `user_id` (defaults to the signed-in user, deleted with the account), `name` (1 to 50 characters), `outfit` (validated outfit JSON, at most 8 KB), `answers` (structured questionnaire choices only, at most 1 KB; the free-text notes are never stored), `created_at`. Index on (`user_id`, `created_at` descending). Limit of 100 saved outfits per user, enforced by a trigger with a clear error.
+
+Proposed security: Row Level Security enabled; `anon` has no access; `authenticated` may select, insert and delete only rows where `user_id` equals their own id; there is no update permission, so saved outfits are immutable. Each policy names its role and uses the `(select auth.uid())` form recommended by Supabase.
+
+Deliberately not included: a `profiles` table, a `wishlist`, a `style_profiles` table, and storage of any user photo. They have no feature that needs them yet.
+
+Application work after approval: `proxy.ts` to refresh sessions, `/auth/callback`, a Google sign-in button and sign-out on `/account`, a "Save this look" button on results, and a `/saved` page that redraws saved boards and allows deleting. Cache Components means pages that read cookies must sit inside Suspense boundaries.
+
+Owner tasks that cannot be done from code: create the Google OAuth client, enable the Google provider in Supabase, set the Site URL and redirect allow-list in Supabase, and run the approved SQL in the SQL Editor. A Privacy page should exist before public sign-in, and Google may require a privacy policy link to publish the consent screen (not yet verified).
+
 ### Supabase connection (2026-10-11, branch `supabase-connection`)
 
 What exists: the connection foundation only. No tables, no migrations, no login, no data stored. The owner reported the new Supabase project has no tables and that the project ID matches; this was not independently verified, but the live check below confirms the settings reach a working project.
@@ -152,7 +198,8 @@ What exists: the connection foundation only. No tables, no migrations, no login,
 Verification (2026-10-11):
 - 120 unit tests pass, lint and `tsc` pass.
 - LIVE, local dev server against the owner's real project: `/api/health/supabase` returned HTTP 200 with configured=true, keyKind=publishable, reachable=true, keyAccepted=true.
-- Not yet verified: production. The two `NEXT_PUBLIC_SUPABASE_` variables must exist in Vercel (Production) and a new deployment must be built, because NEXT_PUBLIC values are copied into the build.
+- LIVE, production, 2026-10-11 (after PR #4 merged as `36fe516` and Vercel deployed it): `/api/health/supabase` returned HTTP 200 with configured=true, keyKind=publishable, reachable=true, keyAccepted=true, with no URL or key in the response. A real stylist request on the same deployment returned 3 outfits.
+- The two `NEXT_PUBLIC_SUPABASE_` variables are therefore set in Vercel (Production). The project ID match and "no tables yet" remain as reported by the owner.
 
 Free-tier note: Supabase's free plan can pause inactive projects. A paused project makes the health check report "no answer"; unpausing it in the dashboard fixes that.
 
@@ -255,7 +302,7 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: commit and merge branch `supabase-connection`, add the two Supabase variables to Vercel (Production), redeploy, and open `/api/health/supabase` on the live site. After that, design login and Saved Styles: show the proposed tables and security policies for approval before anything is applied to the database.
+Next step: the owner completes the sign-in dashboard setup (see "Sign in with Email and Continue with Google"), commits and merges the sign-in work, and approves or changes the proposed `saved_outfits` table and rules (see "Login and Saved Styles: DESIGN ONLY"). Only then is the SQL applied through the Supabase SQL Editor and the Save button and `/saved` page built.
 
 State of production (verified 2026-10-11): PR #2 is merged and deployed; `GEMINI_API_KEY` is set for the Production environment; `/stylist` shows the form and a real request returned three outfits.
 

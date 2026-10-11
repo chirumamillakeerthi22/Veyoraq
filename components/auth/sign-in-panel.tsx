@@ -2,18 +2,35 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PasswordField } from "@/components/auth/password-field";
+import {
+  checkSendBudget,
+  formatCountdown,
+  readCooldownSeconds,
+  recordSend,
+  startCooldown,
+} from "@/lib/auth/cooldown";
 import {
   isPlausibleEmail,
-  isSixDigitCode,
-  sendEmailCode,
+  requestPasswordReset,
   signInWithGoogle,
-  verifyEmailCode,
-  type ActionResult,
+  signInWithPassword,
+  signUpWithPassword,
+  type ActionFailure,
   type AuthApi,
 } from "@/lib/auth/client-actions";
+import { PASSWORD_RULES, validatePassword } from "@/lib/auth/password";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const RESEND_SECONDS = 60;
+type Mode = "signin" | "signup" | "reset";
+type Busy = "google" | "form" | null;
+
+const COOLDOWN_KEY = "veyoraq:auth-cooldown-until";
+const SEND_KEY = "veyoraq:auth-email-sends";
+// At most 3 email-sending requests (account confirmation or reset) per 10 minutes
+// from one browser, so repeated presses cannot burn the project's shared allowance.
+const SEND_MAX = 3;
+const SEND_WINDOW_MS = 10 * 60 * 1_000;
 
 const buttonBase =
   "inline-flex min-h-12 w-full items-center justify-center px-7 text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50";
@@ -21,8 +38,8 @@ const primaryButton = `${buttonBase} bg-espresso text-ivory hover:bg-stone`;
 const outlineButton = `${buttonBase} border border-espresso/30 text-espresso hover:border-espresso hover:bg-espresso/5`;
 const inputClass =
   "mt-1 block min-h-12 w-full border border-sand bg-soft-white px-3 text-base";
-
-type Busy = "google" | "send" | "verify" | null;
+const linkButton =
+  "min-h-11 text-left text-sm underline underline-offset-4 disabled:no-underline disabled:opacity-60";
 
 function getAuth(): AuthApi | null {
   try {
@@ -34,30 +51,53 @@ function getAuth(): AuthApi | null {
 
 type SignInPanelProps = {
   next?: string;
+  // Which tab opens first. "Sign up" links use "signup".
+  initialMode?: "signin" | "signup";
   // false means the method is switched off in Supabase for now. It stays visible,
   // with a short note, instead of failing when clicked. Unknown counts as available.
   googleAvailable?: boolean;
   emailAvailable?: boolean;
+  // True while we are still asking Supabase which methods are on. The Google button
+  // stays disabled (with no note) so it can't be pressed before we know.
+  checking?: boolean;
+  // Called after a successful sign-in (the modal uses it to close itself).
+  onSignedIn?: () => void;
 };
 
-// Both ways in, side by side: Continue with Google, or Sign in with Email.
+// Both ways in, side by side: Continue with Google, or email and password.
 export function SignInPanel({
   next = "/account",
+  initialMode = "signin",
   googleAvailable = true,
   emailAvailable = true,
+  checking = false,
+  onSignedIn,
 }: SignInPanelProps) {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [codeSentTo, setCodeSentTo] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<Busy>(null);
   const [message, setMessage] = useState<{ kind: "error" | "info"; text: string } | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const inFlight = useRef(false);
   const messageRef = useRef<HTMLParagraphElement>(null);
+
+  // Pick up a cooldown remembered from an earlier visit to this page.
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setCooldown(readCooldownSeconds(window.sessionStorage, COOLDOWN_KEY)),
+      0,
+    );
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((value) => value - 1), 1_000);
+    const timer = setTimeout(
+      () => setCooldown(readCooldownSeconds(window.sessionStorage, COOLDOWN_KEY)),
+      1_000,
+    );
     return () => clearTimeout(timer);
   }, [cooldown]);
 
@@ -65,71 +105,131 @@ export function SignInPanel({
     if (message) messageRef.current?.focus();
   }, [message]);
 
-  function fail(result: Extract<ActionResult, { ok: false }>) {
-    setMessage({ kind: "error", text: result.message });
-    setBusy(null);
+  function showError(failed: Pick<ActionFailure, "message" | "retryAfterSeconds">) {
+    setMessage({ kind: "error", text: failed.message });
+    if (failed.retryAfterSeconds) {
+      startCooldown(window.sessionStorage, COOLDOWN_KEY, failed.retryAfterSeconds);
+      setCooldown(failed.retryAfterSeconds);
+    }
+  }
+
+  function finishSignedIn() {
+    if (onSignedIn) onSignedIn();
+    router.refresh();
+  }
+
+  function chooseMode(next: Mode) {
+    setMode(next);
+    setMessage(null);
+    setPassword("");
   }
 
   async function onGoogle() {
+    if (inFlight.current) return;
     setMessage(null);
     const auth = getAuth();
-    if (!auth) {
-      return fail({ ok: false, message: "Sign-in isn't available yet." });
-    }
+    if (!auth) return showError({ message: "Sign-in isn't available yet." });
+    inFlight.current = true;
     setBusy("google");
     const result = await signInWithGoogle(auth, window.location.origin, next);
     // On success the browser is already on its way to Google.
-    if (!result.ok) fail(result);
+    if (!result.ok) {
+      showError(result);
+      setBusy(null);
+      inFlight.current = false;
+    }
   }
 
-  async function sendCode(event?: FormEvent) {
-    event?.preventDefault();
-    setMessage(null);
-    if (!isPlausibleEmail(email)) {
-      return fail({ ok: false, message: "That email address doesn't look right." });
-    }
-    const auth = getAuth();
-    if (!auth) {
-      return fail({ ok: false, message: "Sign-in isn't available yet." });
-    }
-    setBusy("send");
-    const result = await sendEmailCode(auth, email, window.location.origin, next);
-    if (!result.ok) return fail(result);
-
-    setCodeSentTo(email.trim());
-    setCode("");
-    setCooldown(RESEND_SECONDS);
-    setBusy(null);
-    setMessage({
-      kind: "info",
-      text: `We sent a 6-digit code to ${email.trim()}. It can take a minute to arrive.`,
-    });
-  }
-
-  async function onVerify(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    // A second press while a request is running is ignored, so one click is one request.
+    if (inFlight.current) return;
+    // Re-read the remembered cooldown instead of trusting possibly stale state.
+    const waitLeft = readCooldownSeconds(window.sessionStorage, COOLDOWN_KEY);
+    if (waitLeft > 0) {
+      setCooldown(waitLeft);
+      return;
+    }
     setMessage(null);
-    if (!codeSentTo) return;
-    if (!isSixDigitCode(code)) {
-      return fail({ ok: false, message: "Enter the 6-digit code from the email." });
+
+    if (!isPlausibleEmail(email)) {
+      return showError({ message: "That email address doesn't look right." });
     }
+    if (mode === "signup") {
+      const problems = validatePassword(password, email);
+      if (problems.length > 0) return showError({ message: problems[0] });
+    }
+    if (mode === "signin" && !password) {
+      return showError({ message: "Enter your password." });
+    }
+
     const auth = getAuth();
-    if (!auth) {
-      return fail({ ok: false, message: "Sign-in isn't available yet." });
+    if (!auth) return showError({ message: "Sign-in isn't available yet." });
+
+    // Requests that send an email are limited per browser as well.
+    const sendsEmail = mode === "signup" || mode === "reset";
+    if (sendsEmail) {
+      const budget = checkSendBudget(window.localStorage, SEND_KEY, SEND_MAX, SEND_WINDOW_MS);
+      if (!budget.allowed) {
+        return showError({
+          message: "You've asked for several emails already. Please wait before asking again.",
+          retryAfterSeconds: budget.retryAfterSeconds,
+        });
+      }
+      recordSend(window.localStorage, SEND_KEY, SEND_WINDOW_MS);
     }
-    setBusy("verify");
-    const result = await verifyEmailCode(auth, codeSentTo, code);
-    if (!result.ok) return fail(result);
-    // Signed in: reload the page so the server renders the signed-in view.
-    router.refresh();
+
+    inFlight.current = true;
+    setBusy("form");
+    try {
+      if (mode === "signin") {
+        const result = await signInWithPassword(auth, email, password);
+        if (!result.ok) return showError(result);
+        finishSignedIn();
+      } else if (mode === "signup") {
+        const result = await signUpWithPassword(auth, email, password, window.location.origin, next);
+        if (!result.ok) return showError(result);
+        if (result.signedIn) {
+          finishSignedIn();
+        } else {
+          setMode("signin");
+          setPassword("");
+          setMessage({
+            kind: "info",
+            text: `Almost there. Check ${email.trim()} for a confirmation link, then sign in here.`,
+          });
+        }
+      } else {
+        const result = await requestPasswordReset(auth, email, window.location.origin);
+        if (!result.ok) return showError(result);
+        setMessage({
+          kind: "info",
+          text: "If an account exists for that email, a reset link is on its way. It can take a few minutes.",
+        });
+      }
+    } finally {
+      inFlight.current = false;
+      setBusy(null);
+    }
   }
+
+  const waiting = cooldown > 0;
+  const submitLabel = waiting
+    ? `Try again in ${formatCountdown(cooldown)}`
+    : busy === "form"
+      ? "Please wait…"
+      : mode === "signin"
+        ? "Sign in"
+        : mode === "signup"
+          ? "Create account"
+          : "Send reset link";
 
   return (
     <div className="max-w-md">
       <button
         type="button"
         onClick={onGoogle}
-        disabled={busy !== null || !googleAvailable}
+        disabled={busy !== null || !googleAvailable || checking}
         aria-describedby={googleAvailable ? undefined : "google-note"}
         className={outlineButton}
       >
@@ -137,19 +237,43 @@ export function SignInPanel({
       </button>
       {!googleAvailable && (
         <p id="google-note" className="mt-2 text-sm text-stone">
-          Google sign-in is being set up. Please use email for now.
+          Google sign-in is being set up. Please use email and password for now.
         </p>
       )}
 
       <p
         aria-hidden="true"
-        className="my-6 flex items-center gap-4 text-xs uppercase tracking-[0.22em] text-stone before:h-px before:flex-1 before:bg-sand after:h-px after:flex-1 after:bg-sand"
+        className="my-4 flex items-center gap-4 text-xs uppercase tracking-[0.22em] text-stone before:h-px before:flex-1 before:bg-sand after:h-px after:flex-1 after:bg-sand"
       >
         or
       </p>
 
-      {codeSentTo === null ? (
-        <form onSubmit={sendCode} noValidate>
+      {mode !== "reset" && (
+        <div className="mb-4 grid grid-cols-2 border border-sand" role="group" aria-label="Email account">
+          {(["signin", "signup"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={mode === value}
+              onClick={() => chooseMode(value)}
+              className={`min-h-11 text-sm transition-colors duration-200 ${
+                mode === value ? "bg-espresso text-ivory" : "hover:bg-espresso/5"
+              }`}
+            >
+              {value === "signin" ? "Sign in" : "Create account"}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {mode === "reset" && (
+        <p className="mb-4 text-sm leading-6 text-stone">
+          Enter your email and we&rsquo;ll send you a link to choose a new password.
+        </p>
+      )}
+
+      <form onSubmit={onSubmit} noValidate className="space-y-3">
+        <div>
           <label htmlFor="email" className="text-sm text-stone">
             Email address
           </label>
@@ -159,71 +283,71 @@ export function SignInPanel({
             inputMode="email"
             autoComplete="email"
             value={email}
+            disabled={!emailAvailable}
             onChange={(event) => setEmail(event.target.value)}
             className={inputClass}
           />
-          <button
-            type="submit"
-            disabled={busy !== null || !emailAvailable}
-            className={`${primaryButton} mt-4`}
-          >
-            {busy === "send" ? "Sending…" : "Sign in with email"}
+        </div>
+
+        {mode !== "reset" && (
+          <>
+            <PasswordField
+              value={password}
+              onChange={setPassword}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              describedBy={mode === "signup" ? "password-rules" : undefined}
+              disabled={!emailAvailable}
+            />
+            {mode === "signup" && (
+              <p id="password-rules" className="text-sm text-stone">
+                {PASSWORD_RULES}
+              </p>
+            )}
+          </>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy !== null || waiting || !emailAvailable}
+          className={primaryButton}
+        >
+          {submitLabel}
+        </button>
+      </form>
+
+      {!emailAvailable && (
+        <p className="mt-3 text-sm text-stone">
+          Email sign-in is being set up. Please use Google for now.
+        </p>
+      )}
+
+      <div className="mt-2 flex flex-col">
+        {mode === "signin" && (
+          <button type="button" onClick={() => chooseMode("reset")} className={linkButton}>
+            Forgot your password?
           </button>
-          <p className="mt-3 text-sm text-stone">
-            {emailAvailable
-              ? "We’ll email you a code. No password needed."
-              : "Email sign-in is being set up. Please use Google for now."}
-          </p>
-        </form>
-      ) : (
-        <form onSubmit={onVerify} noValidate>
-          <label htmlFor="code" className="text-sm text-stone">
-            6-digit code
-          </label>
-          <input
-            id="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-            className={`${inputClass} tracking-[0.4em]`}
-          />
-          <button
-            type="submit"
-            disabled={busy !== null}
-            className={`${primaryButton} mt-4`}
-          >
-            {busy === "verify" ? "Checking…" : "Continue"}
+        )}
+        {mode === "reset" && (
+          <button type="button" onClick={() => chooseMode("signin")} className={linkButton}>
+            Back to sign in
           </button>
-          <div className="mt-4 flex flex-col gap-1 text-sm">
-            <button
-              type="button"
-              onClick={() => sendCode()}
-              disabled={busy !== null || cooldown > 0}
-              className="min-h-11 text-left underline underline-offset-4 disabled:no-underline disabled:opacity-60"
-            >
-              {cooldown > 0 ? `Send a new code in ${cooldown}s` : "Send a new code"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCodeSentTo(null);
-                setMessage(null);
-              }}
-              className="min-h-11 text-left underline underline-offset-4"
-            >
-              Use a different email
-            </button>
-          </div>
-        </form>
+        )}
+      </div>
+
+      {waiting && (
+        <p className="mt-2 text-sm text-stone">
+          We&rsquo;re pausing requests for a moment so you don&rsquo;t get locked out. Google sign-in
+          is still available.
+        </p>
       )}
 
       <p
         ref={messageRef}
         tabIndex={-1}
         role={message?.kind === "error" ? "alert" : "status"}
-        className={`mt-4 text-sm outline-none ${message?.kind === "error" ? "text-espresso" : "text-stone"}`}
+        className={`mt-2 text-sm leading-6 outline-none ${
+          message?.kind === "error" ? "text-espresso" : "text-stone"
+        }`}
       >
         {message?.text}
       </p>

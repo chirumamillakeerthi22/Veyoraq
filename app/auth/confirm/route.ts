@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-// Only these email link types are accepted.
-const ALLOWED_TYPES = new Set<string>(["email", "magiclink", "signup"]);
+// Only these email link types are accepted: sign-up confirmation, sign-in links and
+// password reset. Other types (invites, address changes) are refused.
+const ALLOWED_TYPES = new Set<string>(["email", "magiclink", "signup", "recovery"]);
 
 /*
   Where the link inside the sign-in email lands. It carries a one-time token that is

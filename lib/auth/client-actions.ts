@@ -1,28 +1,46 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { friendlyAuthMessage } from "./messages";
+import { retryDelaySeconds } from "./cooldown";
+import { friendlyAuthMessage, type AuthErrorLike } from "./messages";
+import { validatePassword } from "./password";
 import { safeNextPath } from "./redirect";
 
-// Only the three calls we use, so tests can pass a small stand-in.
+// Only the calls we use, so tests can pass a small stand-in.
 export type AuthApi = Pick<
   SupabaseClient["auth"],
-  "signInWithOAuth" | "signInWithOtp" | "verifyOtp"
+  | "signInWithOAuth"
+  | "signInWithPassword"
+  | "signUp"
+  | "resetPasswordForEmail"
+  | "updateUser"
 >;
 
-export type ActionResult = { ok: true } | { ok: false; message: string };
+export type ActionFailure = {
+  ok: false;
+  message: string;
+  // Set when Supabase's rate limit was hit: how long to leave the buttons disabled.
+  retryAfterSeconds?: number;
+};
+export type ActionResult = { ok: true } | ActionFailure;
+export type SignUpResult = { ok: true; signedIn: boolean } | ActionFailure;
 
 export function isPlausibleEmail(value: string): boolean {
   const email = value.trim();
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
-export function isSixDigitCode(value: string): boolean {
-  return /^\d{6}$/.test(value.trim());
-}
-
-function callbackUrl(origin: string, path: string, next: string) {
-  const url = new URL(path, origin);
+function callbackUrl(origin: string, next: string) {
+  const url = new URL("/auth/callback", origin);
   url.searchParams.set("next", safeNextPath(next));
   return url.toString();
+}
+
+function failure(error: AuthErrorLike): ActionFailure {
+  const retryAfterSeconds = retryDelaySeconds(error);
+  return {
+    ok: false,
+    message: friendlyAuthMessage(error),
+    ...(retryAfterSeconds ? { retryAfterSeconds } : {}),
+  };
 }
 
 /*
@@ -36,43 +54,80 @@ export async function signInWithGoogle(
 ): Promise<ActionResult> {
   const { error } = await auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: callbackUrl(origin, "/auth/callback", next) },
+    options: { redirectTo: callbackUrl(origin, next) },
   });
-  return error ? { ok: false, message: friendlyAuthMessage(error) } : { ok: true };
+  return error ? failure(error) : { ok: true };
 }
 
-// Emails a one-time code (and a sign-in link). Creates the account on first use.
-export async function sendEmailCode(
+export async function signInWithPassword(
   auth: AuthApi,
   email: string,
-  origin: string,
-  next = "/account",
+  password: string,
 ): Promise<ActionResult> {
   if (!isPlausibleEmail(email)) {
     return { ok: false, message: "That email address doesn't look right." };
   }
-  const { error } = await auth.signInWithOtp({
-    email: email.trim(),
-    options: {
-      emailRedirectTo: callbackUrl(origin, "/auth/confirm", next),
-      shouldCreateUser: true,
-    },
-  });
-  return error ? { ok: false, message: friendlyAuthMessage(error) } : { ok: true };
+  if (!password) {
+    return { ok: false, message: "Enter your password." };
+  }
+  const { error } = await auth.signInWithPassword({ email: email.trim(), password });
+  return error ? failure(error) : { ok: true };
 }
 
-export async function verifyEmailCode(
+/*
+  Creates an account with an email and password (the password is handled only by
+  Supabase Auth). If the project requires email confirmation there is no session yet,
+  and signedIn is false; if confirmation is switched off the visitor is signed in.
+*/
+export async function signUpWithPassword(
   auth: AuthApi,
   email: string,
-  code: string,
-): Promise<ActionResult> {
-  if (!isSixDigitCode(code)) {
-    return { ok: false, message: "Enter the 6-digit code from the email." };
+  password: string,
+  origin: string,
+  next = "/account",
+): Promise<SignUpResult> {
+  if (!isPlausibleEmail(email)) {
+    return { ok: false, message: "That email address doesn't look right." };
   }
-  const { error } = await auth.verifyOtp({
+  const problems = validatePassword(password, email);
+  if (problems.length > 0) {
+    return { ok: false, message: problems[0] };
+  }
+  const { data, error } = await auth.signUp({
     email: email.trim(),
-    token: code.trim(),
-    type: "email",
+    password,
+    options: { emailRedirectTo: callbackUrl(origin, next) },
   });
-  return error ? { ok: false, message: friendlyAuthMessage(error) } : { ok: true };
+  if (error) return failure(error);
+  return { ok: true, signedIn: Boolean(data.session) };
+}
+
+// Always reports success when the request goes through, so it cannot be used to
+// discover which email addresses have accounts.
+export async function requestPasswordReset(
+  auth: AuthApi,
+  email: string,
+  origin: string,
+): Promise<ActionResult> {
+  if (!isPlausibleEmail(email)) {
+    return { ok: false, message: "That email address doesn't look right." };
+  }
+  const { error } = await auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: callbackUrl(origin, "/account/reset-password"),
+  });
+  return error ? failure(error) : { ok: true };
+}
+
+// Sets a new password for the signed-in (or recovering) visitor.
+export async function updatePassword(
+  auth: AuthApi,
+  password: string,
+  email = "",
+): Promise<ActionResult> {
+  const problems = validatePassword(password, email);
+  if (problems.length > 0) {
+    return { ok: false, message: problems[0] };
+  }
+  const { error } = await auth.updateUser({ password });
+  return error ? failure(error) : { ok: true };
 }

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { outfitKey } from "@/lib/saved/outfit-key";
 import {
   outfitSchema,
   type Outfit,
@@ -23,6 +24,8 @@ export type SavedOutfit = {
   id: string;
   name: string;
   outfit: Outfit;
+  // Identifies the look by its content, so the same look is recognised everywhere.
+  key: string;
   createdAt: string;
 };
 
@@ -66,6 +69,7 @@ export function friendlySaveError(error: DbErrorLike): string {
     return "Please sign in to save outfits.";
   }
   if (code === "P0001" || message.includes("limit reached")) {
+    // (the 100-look limit is enforced by a database trigger)
     return `You've reached the limit of ${SAVED_LIMIT} saved outfits. Remove one to save another.`;
   }
   return "We couldn't save that just now. Please try again.";
@@ -108,6 +112,7 @@ export function parseSavedRows(rows: unknown): SavedOutfit[] {
       id,
       name,
       outfit: parsed.data,
+      key: outfitKey(parsed.data),
       createdAt: typeof createdAt === "string" ? createdAt : "",
     });
   }

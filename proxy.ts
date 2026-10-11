@@ -13,5 +13,5 @@ export async function proxy(request: NextRequest) {
 // Only the pages that deal with a login session. Everything else (the homepage,
 // the stylist, images, files) is untouched and stays fast and static.
 export const config = {
-  matcher: ["/account", "/saved/:path*", "/auth/:path*"],
+  matcher: ["/account/:path*", "/saved/:path*", "/auth/:path*"],
 };

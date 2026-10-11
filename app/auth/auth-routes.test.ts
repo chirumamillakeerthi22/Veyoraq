@@ -92,8 +92,17 @@ describe("GET /auth/confirm (email link)", () => {
     expect(location(response).pathname).toBe("/saved");
   });
 
+  it("accepts a password-reset link and sends the visitor to the reset page", async () => {
+    verifyOtp.mockResolvedValue({ error: null });
+    const response = await confirm(
+      req("/auth/confirm?token_hash=hash123&type=recovery&next=/account/reset-password"),
+    );
+    expect(verifyOtp).toHaveBeenCalledWith({ type: "recovery", token_hash: "hash123" });
+    expect(location(response).pathname).toBe("/account/reset-password");
+  });
+
   it("accepts only the allowed link types", async () => {
-    for (const type of ["recovery", "invite", "email_change", "bogus"]) {
+    for (const type of ["invite", "email_change", "bogus"]) {
       const response = await confirm(
         req(`/auth/confirm?token_hash=hash123&type=${type}`),
       );

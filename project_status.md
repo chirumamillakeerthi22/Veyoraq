@@ -140,6 +140,42 @@ Known limitations:
 - Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
 - `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
 
+### Fix round: login error, Saved Styles sync, Wishlist, Account menu, Settings, centred login (2026-10-12, UNCOMMITTED on `login-and-saved-styles`)
+
+Root causes found by reproducing each problem with a real throwaway account:
+1. "An error occurred" after login. Next.js 16 with Cache Components raised "`Date.now()` while prerendering" for `/account`. The Supabase session code reads the clock when a session cookie exists, and Next.js only allows that at request time. Reproduced on a plain reload while signed in (error count 1 to 2). Fix: `await connection()` before reading the session on `/account`, `/saved` (since removed) , `/account/settings` and `/account/reset-password`. After the fix no new error appeared across reload, sign-out and sign-in, and `/account` returned 200 with the signed-in view for `?`, `?x=1`, `?error=...`, `?code=...`. (Older `isSixDigitCode` errors in the console were from a half-applied edit of mine, not this bug.)
+2. Saved state out of sync. The "Saved" status lived in each button's own memory, never read from the database, and Next.js keeps the Discover page mounted in the background, so the stale state came back. Looks also had no identity, so duplicates could not be detected. Fix: one shared store (`lib/saved/store.ts`) that always re-reads the database, a content-based key for each look (`lib/saved/outfit-key.ts`), one save/remove mechanism, one-at-a-time operations, and a "database confirmed it" rule before showing success.
+3. The shared sign-in state is now `lib/auth/auth-store.ts`; the Account menu, the popup and the saved/wishlist stores all read it (no competing state).
+
+Added: Account menu (real email, Saved Styles, Wishlist, Settings, Sign out; Sign in and Sign up when signed out), top-navigation links for Saved Styles and Wishlist, `/account/settings` (email, sign-in method, change password for password users, sign out; nothing else exists yet), `/wishlist` (separate from Saved Styles), `?mode=signup`, a centred and compacted sign-in card, popup timer now counts only while signed out and resets on sign-in.
+
+DATABASE: nothing was changed or applied in this round. Two proposals await the owner's approval:
+- `supabase/migrations/20261012000000_wishlist_items.sql`: NEW table `wishlist_items` with Row Level Security. No wishlist table or product catalogue existed, so there was nothing to reuse.
+- `supabase/migrations/20261012000100_saved_outfits_no_duplicates.sql`: a unique index so the same look cannot be saved twice even from two tabs or devices. It changes an existing table and includes an optional, commented-out de-duplication step that deletes data; review step 1 first.
+
+Verified in the real browser against the real project (test account, since deleted from the browser; the account itself remains in Supabase Auth for the owner to delete): saved a look, saw it in Saved Styles, removed it there, and Discover then offered "Save this look" again; saved again with a double press and got one record; hard refresh kept the state; sign-out reset both pages; Saved Styles showed a sign-in prompt signed out; sign-in restored the look; Account menu in both states; Settings; Wishlist unavailable message; centred login at 1440, 1280, 1024 (all within 1 px), phone and 320 px with no sideways overflow; popup at 2 minutes, dismissal, no popup after sign-in. 338 unit tests, lint, `tsc` and production build pass.
+
+NOT verified: adding to, listing and removing from the Wishlist (no table); isolation between two real accounts in the app (verified at database level by the owner's 10 of 10 security test, not re-run with a second account); real Google sign-in; real password-reset email.
+
+### Email and password, rate-limit fix and sign-in popup (2026-10-11, branch `login-and-saved-styles`, UNCOMMITTED on top of PR #5)
+
+Why the "too many requests" message appeared (investigated, not assumed):
+- Supabase's documented limits: the built-in email sender allows 2 emails per hour for the WHOLE project (all visitors share it) and cannot be raised; each address has a 60-second cooldown for sign-in codes, sign-up confirmations and password resets; sign-ups and sign-ins are 30 per 5 minutes per IP; password sign-ins (`/token`) are 150 per 5 minutes per IP. Custom SMTP makes the email limit configurable.
+- Our own form made it worse. Measured in the browser: a fast double-click sent 2 requests, and after the error the button was immediately usable again, so 5 presses sent 5 requests. Fixed (see below).
+
+What changed:
+- The email-code flow was replaced by email and password, handled entirely by Supabase Auth. Passwords are never stored in our tables and `saved_outfits` is untouched: password users get the same `authenticated` role and `auth.uid()`, so the existing Row Level Security applies unchanged.
+- `/account` and the popup: Continue with Google, plus Sign in / Create account tabs, show/hide password, password rules (8 to 72 bytes, a letter and a number, not the email), "Forgot your password?".
+- Password reset: `/account/reset-password` (signed-out visitors see "link expired"; the page is not indexed). `/auth/confirm` now also accepts `recovery` links; reset also works through `/auth/callback` in the same browser.
+- Rate-limit handling, without retrying or bypassing anything: one press is one request (in-flight guard); after a limit the buttons lock with a live countdown that is remembered across reloads; email-sending actions (sign-up, reset) are capped at 3 per 10 minutes per browser; the remaining wait comes from Supabase's own message when it gives one, otherwise 60 s (or 5 min for the email limit).
+- Sign-in popup: after 2 minutes of visible time (hidden tabs don't count), once per session, centred, closable (X, "Not now", the dimmed area, Escape). Closing keeps it away for 7 days. Never shown to signed-in visitors, on `/account/*` or `/auth/*`, or while the visitor is typing. It reads Supabase's public settings so Google shows "being set up" instead of failing.
+
+Email confirmation DECISION (owner, 2026-10-11): OFF for the early testing phase, to be turned back ON once real email sending exists. VERIFIED the same day through Supabase's public settings: `mailer_autoconfirm` is now true. New accounts are signed in immediately; the "Create account" path sends no email. Password reset still depends on email delivery and will only reach team members until custom SMTP exists. Earlier state, for reference: "Confirm email" was ON (`mailer_autoconfirm` false). The code works in both modes: with it ON, Create account sends a confirmation email (which the built-in sender can only deliver to team members, at 2 per hour); with it OFF, the visitor is signed in at once. Turning it OFF is a dashboard decision for the owner (Authentication > Providers > Email > Confirm email). Trade-offs are in the assistant's report: unverified addresses (anyone can register someone else's address, typos create unusable accounts), spam sign-ups (limited to 30 per 5 minutes per IP by Supabase), and password reset only works once real email sending exists.
+
+Verification (2026-10-11): 286 unit tests, lint, `tsc` and production build pass. In the real browser at 390 px: a wrong password against the real project returns "That email and password don't match"; a double-click makes 1 request (was 2); a rate-limited press locks the button with a countdown and 5 further presses make 0 requests; the cooldown survives a reload; weak passwords and bad emails are caught with no request; reset sends 1 request and does not reveal whether the account exists; the 4th reset in 10 minutes is refused locally; the popup does not show at 100 s, shows at 120 s centred (352 px on a 390 px screen) with both options, records its dismissal on every close path and stays away, and never shows on `/account`; both landing routes fail safely for bogus tokens.
+
+NOT tested end to end (they create real accounts or send real email, or need Google set up): a real sign-up, a real sign-in with a real password, logout, session persistence across reloads, a real reset email, a real Google sign-in. A checklist for the owner is in the assistant's report.
+
 ### Save this look and Saved Styles (2026-10-11, branch `login-and-saved-styles`, PR #5)
 
 The owner approved the `saved_outfits` table as proposed and ran the SQL in the Supabase SQL Editor (the assistant has only the public key and no database administrator access).
@@ -165,7 +201,7 @@ Both methods are implemented in code and unit tested. They are NOT yet usable en
 
 What exists:
 - `/account` shows both options side by side. Signed in, it shows the email, how they signed in, and a sign-out button.
-- Email: the visitor enters an address, receives a 6-digit code (and a link), and enters the code. No password. `signInWithOtp` creates the account on first use; `verifyOtp` checks the code. The email link goes to `/auth/confirm` (token-hash check on the server, which works across browsers).
+- Email: SUPERSEDED on 2026-10-11 by email and password (see "Email and password, rate-limit fix and sign-in popup" below). The first version used a 6-digit emailed code; it was removed because it depended on the project's 2-emails-per-hour built-in sender.
 - Google: `signInWithOAuth`, returning to `/auth/callback`, which exchanges the code for a session.
 - `proxy.ts` refreshes sessions, limited to `/account`, `/saved/*` and `/auth/*`, so the homepage and stylist are untouched.
 - `/account` reads Supabase's public settings endpoint and shows "being set up" for a method that is switched off, instead of sending a visitor to a raw error page.
@@ -179,7 +215,7 @@ State of the project's Supabase Auth settings when checked (public settings endp
 
 Owner setup still required:
 1. Email delivery. Supabase's built-in sender delivers only to team members, at 2 emails per hour, and is not for production. Real visitors need a custom SMTP provider (Authentication > Emails/SMTP). Until then, email sign-in works only for addresses that are members of the Supabase project team. The owner has no domain-based email address yet. Stopgap without a domain: a dedicated Gmail account with 2-Step Verification and an App Password used as the SMTP login (smtp.gmail.com, port 465 or 587). Google documents a limit of 500 emails per day for the account and says app passwords are not recommended in most cases; they are not available for work/school or Advanced Protection accounts. Replace with a domain-based SMTP provider when a domain exists.
-2. Email template. The Magic Link and Confirm sign up templates must include `{{ .Token }}` (the code) and the link `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/account`.
+2. Email templates (only needed once email sending works). For password reset, the "Reset Password" template should link to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/account/reset-password` so it works in any browser; the default link also works in the same browser. If "Confirm email" stays on, the "Confirm sign up" template can use `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/account`.
 3. Google. Create an OAuth client in Google Cloud, enter its client ID and secret under Authentication > Providers > Google, and add the Supabase callback URL to Google's authorised redirect URIs.
 4. URLs. In Supabase Authentication > URL Configuration set the Site URL to https://veyoraq.vercel.app and add http://localhost:3000/** and https://veyoraq.vercel.app/** to the redirect allow-list.
 5. A Privacy page before public sign-in (the footer link is still "Soon").

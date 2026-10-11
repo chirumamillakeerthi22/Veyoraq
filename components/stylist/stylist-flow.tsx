@@ -335,7 +335,7 @@ export function StylistFlow() {
                 currency: event.target.value as Answers["currency"],
               })
             }
-            className="mt-1 block min-h-12 w-full border border-sand bg-soft-white px-3 text-sm sm:w-48"
+            className="mt-1 block min-h-12 w-full border border-sand bg-soft-white px-3 text-base sm:w-48"
           >
             {currencyValues.map((value) => (
               <option key={value} value={value}>

@@ -11,20 +11,12 @@ const itemClass =
   "flex min-h-11 items-center px-2 text-sm transition-colors duration-200 hover:bg-champagne/60";
 
 /*
-  The Account section at the bottom of the sidebar. It reads the one shared sign-in
+  The Account icon and its menu. It reads the one shared sign-in
   state, so it changes the moment someone signs in or out, and it never shows an
   email unless the session has one. Saved Styles and Wishlist have their own
-  sidebar destinations, so they are not repeated here.
+  navigation destinations, so they are not repeated here.
 */
-export function AccountMenu({
-  onNavigate,
-  variant = "sidebar",
-}: {
-  onNavigate?: () => void;
-  // "header" is the icon in the top bar (menu opens below); "sidebar" is the full
-  // row at the bottom of the mobile drawer (menu opens above).
-  variant?: "sidebar" | "header";
-}) {
+export function AccountMenu() {
   const auth = useAuthState();
   const router = useRouter();
   const pathname = usePathname();
@@ -74,46 +66,9 @@ export function AccountMenu({
   }
 
   const signedIn = auth.status === "signed-in";
-  const initial = (auth.email ?? "").trim().charAt(0).toUpperCase();
-  const inHeader = variant === "header";
 
   return (
     <div ref={wrapperRef} className="relative">
-      {inHeader ? (
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-expanded={open}
-          aria-controls={open ? panelId : undefined}
-          aria-haspopup="true"
-          onClick={() => setOpenOn(open ? null : pathname)}
-          className="group relative flex h-11 w-11 items-center justify-center text-stone transition-colors duration-200 hover:text-espresso"
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="h-[1.375rem] w-[1.375rem] transition-transform duration-300 group-hover:-translate-y-0.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-          >
-            <circle cx="12" cy="8.5" r="3.5" />
-            <path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" />
-          </svg>
-          {signedIn && (
-            <span
-              aria-hidden="true"
-              className="absolute right-2 top-2 h-2 w-2 rounded-full bg-olive"
-            />
-          )}
-          <span className="sr-only">
-            {signedIn
-              ? `Account menu, signed in as ${auth.email ?? "your account"}`
-              : "Account menu"}
-          </span>
-        </button>
-      ) : (
       <button
         ref={buttonRef}
         type="button"
@@ -121,63 +76,37 @@ export function AccountMenu({
         aria-controls={open ? panelId : undefined}
         aria-haspopup="true"
         onClick={() => setOpenOn(open ? null : pathname)}
-        className="group flex min-h-12 w-full items-center gap-3 rounded-sm px-2 text-left transition-colors duration-300 hover:bg-champagne/60"
+        className="group relative flex h-11 w-11 items-center justify-center text-stone transition-colors duration-200 hover:text-espresso"
       >
-        <span
-          aria-hidden="true"
-          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/60 bg-champagne/70 text-sm text-espresso transition-transform duration-300 group-hover:scale-105"
-        >
-          {signedIn && initial ? (
-            initial
-          ) : (
-            <svg
-              viewBox="0 0 24 24"
-              className="h-[1.125rem] w-[1.125rem]"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            >
-              <circle cx="12" cy="8.5" r="3.5" />
-              <path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" />
-            </svg>
-          )}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm leading-5">Account</span>
-          <span className="block truncate text-xs leading-4 text-stone">
-            {auth.status === "loading"
-              ? "Checking…"
-              : signedIn
-                ? (auth.email ?? "Signed in")
-                : "Sign in or sign up"}
-          </span>
-        </span>
         <svg
           aria-hidden="true"
           viewBox="0 0 24 24"
-          className={`h-4 w-4 shrink-0 text-stone transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
+          className="h-[1.375rem] w-[1.375rem] transition-transform duration-300 group-hover:-translate-y-0.5"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="1.4"
           strokeLinecap="round"
-          strokeLinejoin="round"
         >
-          <path d="M6 15l6-6 6 6" />
+          <circle cx="12" cy="8.5" r="3.5" />
+          <path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" />
         </svg>
+        {signedIn && (
+          <span
+            aria-hidden="true"
+            className="absolute right-2 top-2 h-2 w-2 rounded-full bg-olive"
+          />
+        )}
+        <span className="sr-only">
+          {signedIn
+            ? `Account menu, signed in as ${auth.email ?? "your account"}`
+            : "Account menu"}
+        </span>
       </button>
-      )}
 
       {open && (
         <div
           id={panelId}
-          className={`absolute z-50 border border-sand bg-ivory p-3 shadow-lg shadow-espresso/10 ${
-            inHeader
-              ? "right-0 top-full mt-2 w-72 max-w-[calc(100vw-2.5rem)]"
-              : "inset-x-0 bottom-full z-10 mb-2"
-          }`}
+          className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2.5rem)] border border-sand bg-ivory p-3 shadow-lg shadow-espresso/10"
         >
           {auth.status === "loading" && (
             <p className="py-2 text-sm text-stone">Checking your account…</p>
@@ -189,12 +118,12 @@ export function AccountMenu({
               <p className="mt-1 break-all px-2 text-sm">{auth.email ?? "your account"}</p>
               <ul className="mt-3 border-t border-sand pt-2">
                 <li>
-                  <Link href={accountHref} onClick={onNavigate} className={itemClass}>
+                  <Link href={accountHref} className={itemClass}>
                     My account
                   </Link>
                 </li>
                 <li>
-                  <Link href={settingsHref} onClick={onNavigate} className={itemClass}>
+                  <Link href={settingsHref} className={itemClass}>
                     Settings
                   </Link>
                 </li>
@@ -218,17 +147,17 @@ export function AccountMenu({
           {auth.status === "signed-out" && (
             <ul>
               <li>
-                <Link href={accountHref} onClick={onNavigate} className={itemClass}>
+                <Link href={accountHref} className={itemClass}>
                   Sign in
                 </Link>
               </li>
               <li>
-                <Link href={signUpHref} onClick={onNavigate} className={itemClass}>
+                <Link href={signUpHref} className={itemClass}>
                   Sign up
                 </Link>
               </li>
               <li className="mt-2 border-t border-sand pt-2">
-                <Link href={settingsHref} onClick={onNavigate} className={itemClass}>
+                <Link href={settingsHref} className={itemClass}>
                   Settings
                 </Link>
               </li>

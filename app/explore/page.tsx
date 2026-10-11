@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
-import { NavIconGlyph } from "@/components/sidebar/nav-icon";
+import { NavIconGlyph } from "@/components/nav-icon";
 import { fixMyStyleHref, stylistHref, type NavIcon } from "@/lib/navigation";
 
 export const metadata: Metadata = {

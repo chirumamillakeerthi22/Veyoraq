@@ -44,60 +44,6 @@ body {
   outline-color: var(--color-ivory);
 }
 
-/*
-  Sidebar motion. The twinkle is idle for most of its cycle, so it reads as an
-  occasional glimmer instead of constant movement. With reduced motion the
-  global rule below ends it immediately on its resting frame.
-*/
-@keyframes veyoraq-twinkle {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(1) rotate(0deg);
-  }
-  6% {
-    opacity: 1;
-    transform: scale(1.25) rotate(45deg);
-  }
-  12% {
-    opacity: 0.45;
-    transform: scale(1) rotate(90deg);
-  }
-}
-
-@keyframes veyoraq-drawer-in {
-  from {
-    transform: translateX(-1.5rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes veyoraq-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.sparkle {
-  animation: veyoraq-twinkle 11s ease-in-out 2s infinite;
-  transform-origin: center;
-}
-
-.drawer-panel[open] {
-  animation: veyoraq-drawer-in 280ms ease-out;
-}
-
-.drawer-panel[open]::backdrop {
-  animation: veyoraq-fade-in 280ms ease-out;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -382,6 +382,21 @@ Verified (2026-10-11): `tsc --noEmit`, `eslint`, `vitest` (24 files, 344 tests) 
 
 Not verified: the signed-in account menu (no test account was signed in); keyboard Tab order and screen reader by hand; the drawer link navigation in this round (it reuses the code verified last round).
 
+### Mobile-first refinement (branch `mobile-first-ux`, uncommitted)
+
+Done on a new branch from `master`, because `login-and-saved-styles` was already merged.
+
+- Phones (below md): compact header (wordmark, Shop icon, Account icon) and a fixed bottom bar with Home, Explore, Saved and Wishlist; the active one is highlighted. Safe-area insets are respected (`viewport-fit=cover`, bar and header padding) and the page keeps room above the bar.
+- md and up: unchanged horizontal header (logo, Explore, Shop, Saved, Wishlist, Account icon). No sidebar.
+- Homepage on phones: image first, headline, one sentence and one full-width CTA on the first screen (the CTA is above the bottom bar from 320x640 up); service cards are compact rows; the Journal preview shows three entries (all on md and up).
+- Currency select raised to 16px so iOS does not zoom on focus.
+- Removed the phone drawer and sidebar code, which the bottom bar replaced.
+- Not changed: Supabase, RLS, authentication configuration, Gemini, environment variables. No new dependencies.
+
+Verified (2026-10-11), production build, in a browser: widths 320, 360, 390, 430, 768, 1024 and 1440 on the homepage (no horizontal overflow, bottom bar shown below md only, header links at 768). At 320 also: /explore, /shop, /stylist, /saved, /wishlist, /fix-my-style, /account (no overflow, no touch targets under 43px in the checked controls, footer clear of the bottom bar, account menu inside the viewport, email input type/inputmode correct).
+
+Not verified / not applicable: there is no photo upload or camera capture anywhere in the app (FIX My Style is a "coming soon" page), so nothing was built or tested there. Not tested on a real phone: safe-area insets on a notched device, on-screen keyboard behaviour in the sign-in dialog, iOS zoom behaviour. Keyboard Tab order and screen readers were not tested by hand. Signed-in states of the account menu, Saved Styles and Wishlist with real items were not exercised.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

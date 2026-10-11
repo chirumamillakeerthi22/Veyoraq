@@ -2,6 +2,7 @@ import type { NavIcon } from "@/lib/navigation";
 
 // Fine single-line icons, all drawn on the same 24px grid.
 const paths: Record<NavIcon, React.ReactNode> = {
+  home: <path d="M4 11l8-6.500 8 6.500M6 9.500V20h12V9.500M10 20v-5.500h4V20" />,
   discover: (
     <>
       <path d="M11 4l1.7 4.8L17.5 10.5l-4.8 1.7L11 17l-1.7-4.8L4.5 10.5l4.8-1.7z" />

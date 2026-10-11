@@ -110,6 +110,18 @@ NOT verified: cost per request, output quality across many inputs, behaviour on 
 
 Missing-key behaviour (added 2026-10-10): `/stylist` checks `GEMINI_API_KEY` (`lib/stylist/config.ts`) and shows the "coming soon" page instead of the form when it is absent or whitespace-only, so visitors never fill in a form that cannot work. The check runs when the page is built, so a key added in Vercel takes effect after the next deployment. Verified with two production builds: a build with the key overridden by whitespace prerendered the coming-soon page with no form, and a normal build prerendered the form. `npm test` is now 4 files, 47 tests.
 
+Results visuals and shorter text (2026-10-11, branch `outfit-visuals`, NOT committed, not deployed):
+- Owner feedback: layout fine on mobile, but too much text and no pictures of the outfits.
+- Each outfit is now shown as an illustrated outfit board drawn from the recommendation itself (`lib/stylist/board.ts`, `components/stylist/outfit-board.tsx`): one generic garment shape per piece, filled with the piece's colour, plus a palette strip. It is an illustration of a concept, not a photo and not a product, and the page says so ("Illustrated concepts, not products").
+- To draw it, each piece now carries a `hex` colour in the AI output schema (required, validated).
+- Text was cut: shorter limits in the schema, a prompt that asks for very short phrases, no "Palette" or "Outfit n" labels, compact piece list with colour dots, and "Why it works" plus the styling tip moved into a collapsed section. Page and form hints were shortened. A typical card dropped to roughly 300 characters of visible text.
+- Why illustrations and not AI-generated photos: image-generation models are not available on this free-tier key (both tried returned quota exceeded immediately), and stock photos would not match the recommendation. Generated photos could be revisited on a paid plan.
+- Limits of the drawings: shapes are generic (no sleeves variety, one shoe style besides boots, accessories are a scarf or necklace shape); the AI's hex values decide colours, so a vague colour name can produce an odd shade.
+- Verified: 87 tests pass (new board layout and schema tests), lint, `tsc` and production build pass. A real request through the actual form on the dev server returned 3 outfits drawn as boards (4 garments in the first), at 390 px and 1280 px, no overflow, no console errors, the collapsed section opens on click.
+- Not verified: production (not deployed), real phones, screen readers, how the drawings look across many different outfits.
+
+Free tier (found 2026-10-11): the key is on the free tier. Google's Gemini API terms for unpaid usage say submitted content and responses may be used to improve Google products, human reviewers may read them, and personal information should not be submitted. The terms also bar API clients likely to be accessed by people under 18. Consequences: a warning was added next to the notes field; free-tier quotas are low, so busy periods will show "We're busy right now" (HTTP 429 from Google is handled); there is no spend risk on the free tier. Moving to a paid plan changes the data terms (Google states it then does not use prompts or responses to improve products).
+
 Rate limiting (added 2026-10-11, `lib/stylist/rate-limit.ts`, applied in `app/api/stylist/route.ts`):
 - Per visitor (by IP address): 8 requests per 10 minutes and 40 per 24 hours. The 9th request in a window gets HTTP 429 with a `Retry-After` header and a message saying how long to wait. Only well-formed requests that would reach the AI count; invalid requests and refused requests do not use allowance or extend the wait.
 - It is in memory only: no database, no tables, no new service. Memory is bounded (least recently used visitors are dropped beyond 5,000).
@@ -224,11 +236,13 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: merge PR #2 (it carries the questionnaire, the missing-key check and the rate limiter). `GEMINI_API_KEY` is reported to be set in Vercel already, so the form goes live on the next deployment. Set up the Vercel Firewall rule and the Gemini quota described above. After that, connect Supabase on a new branch (client files and a connectivity check only; no tables).
+Next step: review and merge branch `outfit-visuals` (illustrated outfit boards and shorter text). Set up the Vercel Firewall rule described above. Decide about the notes field and the plan (see "Free tier" below). After that, connect Supabase on a new branch (client files and a connectivity check only; no tables).
+
+State of production (verified 2026-10-11): PR #2 is merged and deployed; `GEMINI_API_KEY` is set for the Production environment; `/stylist` shows the form and a real request returned three outfits.
 
 Open decisions for the owner:
 - Whether to keep the default model `gemini-3.5-flash-lite` (cheapest) or set `GEMINI_MODEL` to a stronger one such as `gemini-3.8-flash`, after comparing quality and cost.
-- Whether to add a per-visitor rate limit before the feature is public.
+- Free tier (see below): keep the free-text notes field with its warning, remove it, or move the key to a paid plan.
 - Whether the chosen Unsplash photos are acceptable, especially those showing people, or should be swapped.
 - Whether to keep hot-linking the photos or download copies into the project before launch.
 

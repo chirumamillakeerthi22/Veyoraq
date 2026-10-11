@@ -1,3 +1,4 @@
+import { OutfitBoard } from "@/components/stylist/outfit-board";
 import { pieceCategoryLabels } from "@/lib/stylist/options";
 import type { Outfit } from "@/lib/stylist/schema";
 
@@ -7,63 +8,57 @@ type OutfitResultsProps = {
 
 export function OutfitResults({ outfits }: OutfitResultsProps) {
   return (
-    <ol className="grid gap-10 lg:grid-cols-3 lg:gap-8">
+    <ol className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
       {outfits.map((outfit, index) => (
-        <li key={`${outfit.name}-${index}`} className="border-t border-espresso/30 pt-6">
+        <li key={`${outfit.name}-${index}`}>
           <article>
-            <p className="text-xs uppercase tracking-[0.22em] text-stone">
-              Outfit {index + 1}
-            </p>
-            <h3 className="mt-2 font-display text-3xl leading-tight">
+            <div className="overflow-hidden border border-sand">
+              <OutfitBoard outfit={outfit} />
+            </div>
+
+            <h3 className="mt-5 font-display text-3xl leading-tight">
               {outfit.name}
             </h3>
-            <p className="mt-3 leading-7 text-stone">{outfit.summary}</p>
+            <p className="mt-1 leading-7 text-stone">{outfit.summary}</p>
 
-            <h4 className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
-              Palette
-            </h4>
-            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
-              {outfit.palette.map((swatch) => (
-                <li key={swatch.hex + swatch.name} className="flex items-center gap-2 text-sm">
-                  <span
-                    aria-hidden="true"
-                    className="h-6 w-6 shrink-0 border border-sand"
-                    style={{ backgroundColor: swatch.hex }}
-                  />
-                  {swatch.name}
-                </li>
-              ))}
-            </ul>
-
-            <h4 className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
-              The pieces
-            </h4>
-            <ul className="mt-3">
+            <ul className="mt-5">
               {outfit.pieces.map((piece, pieceIndex) => (
                 <li
                   key={`${piece.category}-${pieceIndex}`}
-                  className="border-b border-sand py-3 first:pt-0"
+                  className="flex items-center gap-3 border-t border-sand py-2.5 first:border-t-0"
                 >
-                  <p className="text-xs uppercase tracking-[0.18em] text-stone">
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 border border-espresso/30"
+                    style={{ backgroundColor: piece.hex }}
+                  />
+                  <span className="w-[5.5rem] shrink-0 text-[0.6875rem] uppercase tracking-[0.12em] text-stone">
                     {pieceCategoryLabels[piece.category]}
-                  </p>
-                  <p className="mt-1 leading-6">
-                    {piece.description}{" "}
-                    <span className="text-stone">({piece.colour})</span>
-                  </p>
+                  </span>
+                  <span className="leading-6">
+                    <span className="sr-only">{piece.colour}, </span>
+                    {piece.description}
+                  </span>
                 </li>
               ))}
             </ul>
 
-            <h4 className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
-              Why it works
-            </h4>
-            <p className="mt-2 leading-7">{outfit.whyItWorks}</p>
-
-            <h4 className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
-              Styling tip
-            </h4>
-            <p className="mt-2 leading-7">{outfit.stylingTip}</p>
+            <details className="group mt-4 border-t border-sand">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-medium [&::-webkit-details-marker]:hidden">
+                Why it works
+                <span
+                  aria-hidden="true"
+                  className="text-lg leading-none transition-transform duration-200 group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <p className="leading-7">{outfit.whyItWorks}</p>
+              <p className="mt-2 leading-7 text-stone">
+                <span className="font-medium text-espresso">Tip: </span>
+                {outfit.stylingTip}
+              </p>
+            </details>
           </article>
         </li>
       ))}

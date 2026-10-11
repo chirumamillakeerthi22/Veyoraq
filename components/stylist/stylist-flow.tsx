@@ -168,9 +168,8 @@ export function StylistFlow() {
             Your outfit ideas
           </h2>
           <p className="mt-3 leading-7 text-stone">
-            These are style concepts, not products. We don&rsquo;t check
-            prices, brands or availability yet, so there is nothing to buy
-            here.
+            Illustrated concepts, not products. We don&rsquo;t check prices or
+            availability yet.
           </p>
         </div>
         <div className="mt-10">
@@ -294,8 +293,7 @@ export function StylistFlow() {
       <fieldset>
         <legend className={legendClass}>What&rsquo;s your budget?</legend>
         <p className={hintClass}>
-          This guides how simple or elevated the pieces are. We don&rsquo;t
-          check real prices yet.
+          Guides the style of the pieces. Real prices aren&rsquo;t checked yet.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {budgetTierValues.map((value) => (
@@ -340,8 +338,8 @@ export function StylistFlow() {
           Anything else we should know?
         </label>
         <p id="notes-hint" className={hintClass}>
-          Optional. For example fabrics you prefer, or things you&rsquo;d rather
-          avoid.
+          Optional, for example fabrics you prefer. Please don&rsquo;t include
+          personal details: this text may be reviewed by Google.
         </p>
         <textarea
           id="notes"

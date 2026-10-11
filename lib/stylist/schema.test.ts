@@ -54,9 +54,29 @@ describe("stylistOutputSchema", () => {
     ).toBe(false);
   });
 
-  it("rejects a bad hex colour", () => {
+  it("rejects a bad palette hex colour", () => {
     const outfit = structuredClone(validOutput.outfits[0]);
     outfit.palette[0].hex = "beige";
+    expect(
+      stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
+    ).toBe(false);
+  });
+
+  it("requires a valid hex colour on every piece", () => {
+    const bad = structuredClone(validOutput.outfits[0]);
+    bad.pieces[0].hex = "ivory";
+    expect(stylistOutputSchema.safeParse({ outfits: [bad] }).success).toBe(false);
+
+    const missing = structuredClone(validOutput.outfits[0]) as unknown as {
+      pieces: Record<string, unknown>[];
+    };
+    delete missing.pieces[0].hex;
+    expect(stylistOutputSchema.safeParse({ outfits: [missing] }).success).toBe(false);
+  });
+
+  it("rejects text that has grown long again", () => {
+    const outfit = structuredClone(validOutput.outfits[0]);
+    outfit.whyItWorks = "word ".repeat(60);
     expect(
       stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
     ).toBe(false);

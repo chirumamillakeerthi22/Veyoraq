@@ -31,7 +31,7 @@ const services: Service[] = [
     text: "Add pieces you already own and explore new ways to combine them.",
     icon: "fix",
     href: fixMyStyleHref,
-    status: "soon",
+    status: "available",
   },
   {
     name: "Hair Studio",

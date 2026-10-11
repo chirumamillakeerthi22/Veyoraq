@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { Container } from "@/components/container";
+import { FixMyStyleApp } from "@/components/fix-my-style/fix-my-style-app";
 
 export const metadata: Metadata = {
   title: "FIX My Style",
-  description: "FIX My Style is in development.",
+  description:
+    "Make more of the clothes you already own. Build a digital wardrobe, create outfits from it, and find the finishing touches.",
 };
 
-// Placeholder: wardrobe uploads and outfit combinations have not been built yet.
+// The page shell is static; the wardrobe lives in the visitor's browser (see
+// lib/fix-my-style/local-repository.ts), so the app itself is a client component.
 export default function FixMyStylePage() {
   return (
-    <ComingSoon
-      title={
-        <>
-          FIX My Style, <em>soon.</em>
-        </>
-      }
-    >
-      Adding pieces from your wardrobe and exploring new combinations
-      isn&rsquo;t available yet. There is no upload here for now, and nothing
-      is collected.
-    </ComingSoon>
+    <Container className="py-8 md:py-14">
+      <FixMyStyleApp />
+    </Container>
   );
 }

@@ -27,14 +27,21 @@ Recheck the versions if the environment changes.
 - typescript 5.9.3
 - tailwindcss 4.3.3, @tailwindcss/turbopack 4.3.3
 - eslint 9.39.5, eslint-config-next 16.4.0
-- @types/node 20.19.43, @types/react 19.3.0, @types/react-dom 19.3.0
+- @types/react 19.3.0, @types/react-dom 19.3.0
+- zod 4.6.5 (added 2026-10-10 for request and AI-output validation)
+- @types/node 24.19.2 (raised from ^20 to match Node 24 and satisfy vitest's peer dependency; types only)
+- vitest 5.0.3 (dev only, added 2026-10-10)
 
-### Project structure (VERIFIED 2026-10-09)
+### Project structure (VERIFIED 2026-10-09; Discover Your Style files added 2026-10-10)
 
 Application code:
 - `app/layout.tsx` — root layout: fonts, metadata (including social-sharing tags), skip link, shared header and footer.
 - `app/page.tsx` — VEYORAQ homepage.
-- `app/stylist/page.tsx`, `app/fix-my-style/page.tsx`, `app/account/page.tsx` — "coming soon" placeholders. None of these features exists.
+- `app/stylist/page.tsx` — Discover Your Style page (questionnaire and results).
+- `app/api/stylist/route.ts` — POST endpoint: same-origin check, size limit, input validation, then the generator.
+- `app/fix-my-style/page.tsx`, `app/account/page.tsx` — "coming soon" placeholders. None of these features exists.
+- `lib/stylist/` — `options.ts` (choices shared by form, schema and prompt), `schema.ts` (zod input and output contracts), `prompt.ts`, `generate.ts` (server-side Gemini `generateContent` call and validation), `fixtures.ts` and `*.test.ts` (tests).
+- `components/stylist/` — `stylist-flow.tsx` (client component: form, loading, error, results), `choice.tsx`, `outfit-results.tsx`.
 - `app/globals.css` — Tailwind import, colour and font tokens, focus and reduced-motion rules.
 - `components/` — `site-header.tsx`, `mobile-nav.tsx` (the only client component), `site-footer.tsx`, `button-link.tsx`, `container.tsx`, `photo.tsx`, `coming-soon.tsx`.
 - `lib/brand.ts` — brand name, tagline and description in one place.
@@ -43,18 +50,20 @@ Application code:
 - `app/favicon.ico`, `public/*.svg` — default template assets, now unused by the pages but left in place.
 
 Configuration:
-- `package.json`, `package-lock.json` — scripts: `dev`, `build`, `start`, `lint`.
+- `package.json`, `package-lock.json` — scripts: `dev`, `build`, `start`, `lint`, `test`.
+- `vitest.config.mts` — test runner config with the `@` path alias.
+- `.env.example` — placeholders for `GEMINI_API_KEY`, `GEMINI_MODEL` (optional) and the two Supabase public variables. Real values go in `.env.local` (git-ignored) and in Vercel's environment variables.
 - `next.config.ts` — Tailwind loaded through the Turbopack loader; `cacheComponents`, `partialPrefetching` and experimental `agentFeedback` enabled; remote images allowed from `images.unsplash.com/photo-*` only.
 - `tsconfig.json` — strict TypeScript, `@/*` path alias to the project root.
 - `eslint.config.mjs` — Next.js core-web-vitals and TypeScript rules.
-- `.gitignore` — ignores `node_modules`, `.next`, `.env*`, `next-env.d.ts`, `*.tsbuildinfo`.
+- `.gitignore` — ignores `node_modules`, `.next`, `.env*` (except `.env.example`), `next-env.d.ts`, `*.tsbuildinfo`.
 - `.claude/launch.json` — valid JSON; tells the Claude preview pane to run `npm run dev` on port 3000. Not used by Next.js itself. This is not a VS Code `.vscode/launch.json`; none exists.
 
 Documentation: `AGENTS.md`, `claude.md`, `BUILD_GUIDE.md`, `README.md`, `project_status.md`. There is no `MASTER_DEVELOPMENT_PROMPT.md` in the repository.
 
 Generated, not committed: `node_modules/`, `.next/`, `next-env.d.ts`, `tsconfig.tsbuildinfo`.
 
-Not present: API route handlers, tests, `.env*` files, Supabase or OpenAI code, authentication.
+Present but not committed: `.env.local` (git-ignored; holds the Gemini key and the Supabase URL and publishable key). Not present: Supabase code or packages (the Supabase variables are unused so far), authentication, database, product catalogue.
 
 ## 3. Current Application Status
 
@@ -77,6 +86,44 @@ The earlier ENOENT failure of `npm run dev` is INFERRED to have come from runnin
 Note: AGENTS.md warns that this Next.js version has breaking changes. Read the relevant guide in `node_modules/next/dist/docs/` before writing application code.
 
 Do not describe VEYORAQ as a functioning product; only a static homepage and a placeholder page exist.
+
+### Discover Your Style, Phase A (2026-10-10, branch `discover-your-style`, uncommitted, not deployed)
+
+What exists: a one-page questionnaire at `/stylist` (occasion, up to 3 styles, up to 4 colour groups, budget tier plus currency, optional notes up to 300 characters) that posts to `/api/stylist`, which asks Google Gemini for up to three outfit concepts and shows them. Nothing is saved by VEYORAQ: there is no database, no login and no stored answers. (Provider switched from OpenAI to Gemini on 2026-10-10; the OpenAI code was replaced, not kept alongside.)
+
+How it is kept honest:
+- The AI output schema has no field for prices, brands, links or product IDs. Unknown fields are rejected, and text containing links, currency symbols or offers is rejected.
+- The budget is a tier that only guides how simple or elevated the pieces are. The page says prices are not checked. No budget maths is done.
+- The API key is read only on the server, from `GEMINI_API_KEY`, and sent in the `x-goog-api-key` header (never in the URL). The model comes from the optional `GEMINI_MODEL`, with `gemini-3.5-flash-lite` as the default set in `lib/stylist/generate.ts`.
+- The call uses the `generateContent` endpoint with `responseMimeType` and `responseJsonSchema`, a 45 s timeout and an output-token cap. Failures map to friendly messages; the key is redacted from logs and never returned.
+
+Verification (2026-10-10):
+- `npm test` — 3 files, 44 tests passed: input and output schemas, the JSON schema sent to Gemini, the generator with `fetch` mocked (success, default model, thought parts ignored, blocked prompt, withheld answer, MAX_TOKENS, invalid output, no candidates, 429, 5xx, timeout, key redacted from logs), and the route with the generator mocked (valid, malformed JSON, invalid input, oversized body, cross-site request, each failure code).
+- `npm run lint`, `npx tsc --noEmit` — passed after the switch. `npm run build` passed before the switch and was re-run afterwards (see below).
+- LIVE, real Gemini call through the running app, 2026-10-10: a plain request returned HTTP 200 with 3 outfits in about 4 s; a second real request through the actual form returned 3 outfits and 9 palette swatches, with focus moved to the results heading. The output text contained no currency symbols or links.
+- Prompt-injection check: notes asking for rupee prices and a shop link made the model comply, and the output validator rejected it (HTTP 502 `invalid_output`, friendly error). No price or link reached the page. The user sees a generic "try again" message in that case.
+- Diagnostic that found a real bug: a request using the `responseFormat` shape shown on one Google docs page was rejected with HTTP 400; `responseMimeType` + `responseJsonSchema` was accepted. The code uses the accepted shape. The key's visible model list included the default model.
+- Browser: empty submit shows the problems list and moves focus to it; the fourth style is disabled once three are chosen; the earlier no-key run showed the loading state then a friendly error; route status codes checked: 400 bad JSON and bad input, 413 oversized, 405 GET.
+- No horizontal overflow at 1024, 375 and 320 px with real AI results; keyboard Tab shows a visible outline on tiles and Space selects.
+
+NOT verified: cost per request, output quality across many inputs, behaviour on Vercel (the key and variables are only in `.env.local`), real phones, screen readers. Whether Google may use submitted text to improve its products depends on the API plan attached to the key; check that before inviting the public, because the notes field is free text.
+
+Missing-key behaviour (added 2026-10-10): `/stylist` checks `GEMINI_API_KEY` (`lib/stylist/config.ts`) and shows the "coming soon" page instead of the form when it is absent or whitespace-only, so visitors never fill in a form that cannot work. The check runs when the page is built, so a key added in Vercel takes effect after the next deployment. Verified with two production builds: a build with the key overridden by whitespace prerendered the coming-soon page with no form, and a normal build prerendered the form. `npm test` is now 4 files, 47 tests.
+
+Rate limiting (added 2026-10-11, `lib/stylist/rate-limit.ts`, applied in `app/api/stylist/route.ts`):
+- Per visitor (by IP address): 8 requests per 10 minutes and 40 per 24 hours. The 9th request in a window gets HTTP 429 with a `Retry-After` header and a message saying how long to wait. Only well-formed requests that would reach the AI count; invalid requests and refused requests do not use allowance or extend the wait.
+- It is in memory only: no database, no tables, no new service. Memory is bounded (least recently used visitors are dropped beyond 5,000).
+- It is BEST EFFORT. On Vercel, counters live in one server instance, several instances can run at once and instances restart, so a determined caller can exceed it. It is a first layer, not a guarantee.
+- The visitor's IP comes from `x-vercel-forwarded-for`, then `x-forwarded-for`, then `x-real-ip`. Vercel's documentation says the platform sets and overwrites these, so clients cannot spoof them there. Locally and on any other host they can be spoofed.
+- Verified: 66 unit tests pass (limiter, IP extraction, route behaviour). A real production build (`next start` on port 3100, key blanked so no AI call could be made) returned 8 responses then HTTP 429 with `Retry-After: 600`, a second visitor was unaffected, and an invalid request from a refused visitor returned 400.
+
+Shared protection that must still be configured by the owner in dashboards (NOT done, because it cannot be done from code):
+1. Vercel Firewall rate-limit rule. Vercel's documentation says WAF rate limiting is available on all plans, with one rule on Hobby, a fixed window of 10 s to 10 min, and counting by IP. Counters are per region. Suggested rule: path equals `/api/stylist`, method POST, limit 10 requests per 60 seconds per IP, action default (429). Dashboard: project > Firewall > Configure > New Rule > Then: Rate Limit, then Publish.
+2. A quota or spending cap on the Gemini API key, so the worst case is bounded whatever the traffic.
+
+Known limitations:
+- Rate limiting is best effort and per instance (see above). Until the two dashboard settings exist, cost protection is the in-app limiter, input limits, and the token cap.
+- `npm audit` reports 5 high-severity findings in the ESLint tooling chain (`eslint-config-next`, via `braces`). These are development tools, not shipped code, and were present before this work. The suggested fix is a breaking downgrade, so it was not applied.
 
 ### Homepage, second version (2026-10-10, awaiting owner review)
 
@@ -146,7 +193,7 @@ Intended stack:
 - TypeScript
 - Tailwind CSS
 - Supabase
-- OpenAI API
+- Gemini API (replaced the originally planned OpenAI API on 2026-10-10)
 - Vercel
 
 Installation and configuration status must be checked directly in the repository.
@@ -165,11 +212,11 @@ These are planned capabilities, not verified implementations.
 ## 6. Not Yet Verified
 
 - Homepage on real devices and with real photography
-- AI API integration
+- AI output quality at scale, cost, and production behaviour (the Gemini integration itself was verified live on 2026-10-10)
 - Supabase database and authentication
 - Product catalogue
 - Product matching and price calculations
-- Automated tests (no test framework or test script is installed)
+- Automated end-to-end and browser tests (unit tests exist; see Discover Your Style above)
 - shadcn/ui (not installed)
 - Vercel deployment
 
@@ -177,9 +224,11 @@ These are planned capabilities, not verified implementations.
 
 None.
 
-Next step: the owner reviews the homepage. After approval, build the style discovery quiz form at `/stylist` (MVP priority 3), without the AI call at first.
+Next step: merge PR #2 (it carries the questionnaire, the missing-key check and the rate limiter). `GEMINI_API_KEY` is reported to be set in Vercel already, so the form goes live on the next deployment. Set up the Vercel Firewall rule and the Gemini quota described above. After that, connect Supabase on a new branch (client files and a connectivity check only; no tables).
 
 Open decisions for the owner:
+- Whether to keep the default model `gemini-3.5-flash-lite` (cheapest) or set `GEMINI_MODEL` to a stronger one such as `gemini-3.8-flash`, after comparing quality and cost.
+- Whether to add a per-visitor rate limit before the feature is public.
 - Whether the chosen Unsplash photos are acceptable, especially those showing people, or should be swapped.
 - Whether to keep hot-linking the photos or download copies into the project before launch.
 

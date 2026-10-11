@@ -84,7 +84,7 @@ The intended stack is:
 - TypeScript
 - Tailwind CSS
 - Supabase for PostgreSQL and authentication
-- OpenAI API for styling intelligence
+- Gemini API for styling intelligence (switched from OpenAI on 2026-10-10)
 - Vercel for deployment
 
 These are architectural decisions, not proof that any technology has been installed or configured.

@@ -97,13 +97,13 @@ Sections, in this order: hero ("Your style. Decoded." with **Find My Style** and
 **Goal:** a user fills in a form and gets specific, validated outfit ideas.
 
 You'll need:
-- An OpenAI API key from platform.openai.com, with a small spending limit set there.
-- A `.env.local` file in the project root containing `OPENAI_API_KEY=...`. **Never paste the key into chat or commit it.** I'll also add a `.env.example` file with a placeholder value.
+- A Gemini API key from aistudio.google.com/apikey. Check the plan's usage and billing settings before sharing the app widely.
+- A `.env.local` file in the project root containing `GEMINI_API_KEY=...`. **Never paste the key into chat or commit it.** A `.env.example` file with placeholder values is already in the repository.
 
 What gets built:
 - `app/stylist/page.tsx`: a form for occasion, style, budget, country and currency, colours, optional wardrobe items, and notes. It's validated in the browser *and* on the server.
 - `lib/validation/`: Zod schemas for both the form input and the AI's response.
-- `lib/ai/stylist.ts`: the server-only service that calls OpenAI with structured output, so the browser never sees the key.
+- `lib/stylist/generate.ts`: the server-only service that calls Gemini with a JSON schema, so the browser never sees the key.
 - `app/api/stylist/route.ts` (or a Server Action): checks the input, calls the service, checks the response, and returns at most 3 outfits.
 - The results view: outfit name, occasion, pieces, colour palette, why it works, items you already own vs. items you'd need, and a Refine button.
 - Loading, error, and "AI unavailable" states, plus a basic rate limit to keep costs low.
@@ -118,7 +118,7 @@ The AI returns **categories and descriptions only**, never product names, prices
 
 **Goal:** a small, honest product catalogue, and outfit pieces matched to it.
 
-You'll need: a free Supabase project. Put `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`.
+You'll need: a free Supabase project. Put `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local`.
 
 - `supabase/migrations/001_products.sql`: `products` and `product_listings` tables (name, brand, category, colour, image URL, retailer, product URL, price, currency, source, last verified), with Row Level Security set so the public can read and only admins can write.
 - A starter catalogue of about 20 to 40 items that **you** collect by hand from retailers whose terms allow it, each with its source and a verification date. Retailer images are only used when that's allowed. Otherwise we show a neutral placeholder.

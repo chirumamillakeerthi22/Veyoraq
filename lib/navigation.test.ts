@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectionLinks, isActiveLink, navLinks } from "./navigation";
+import { bottomNavLinks, collectionLinks, isActiveLink, navLinks } from "./navigation";
 
 describe("isActiveLink", () => {
   it("marks a page link active on its own path and below it", () => {
@@ -36,5 +36,20 @@ describe("navigation link data", () => {
     expect(collectionLinks.map((link) => link.href)).toEqual(["/saved", "/wishlist"]);
     expect(collectionLinks[0].label).toBe("Saved Styles");
     expect(collectionLinks[0].shortLabel).toBe("Saved");
+  });
+
+  it("keeps the phone bottom bar to Home, Explore, Saved and Wishlist", () => {
+    expect(bottomNavLinks.map((link) => link.href)).toEqual([
+      "/",
+      "/explore",
+      "/saved",
+      "/wishlist",
+    ]);
+  });
+
+  it("marks Home current only on the homepage itself", () => {
+    expect(isActiveLink("/", "/")).toBe(true);
+    expect(isActiveLink("/saved", "/")).toBe(false);
+    expect(isActiveLink("/stylist", "/")).toBe(false);
   });
 });

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
 import { Photo } from "@/components/photo";
-import { brand } from "@/lib/brand";
 import { exploreHref, fixMyStyleHref, shopHref, stylistHref } from "@/lib/navigation";
 import type { PhotoName } from "@/lib/photos";
 
@@ -115,30 +114,37 @@ export default function Home() {
     <>
       {/* Hero */}
       <section aria-labelledby="hero-heading">
-        <Container className="grid gap-8 pb-16 pt-8 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
+        <Container className="grid gap-6 pb-10 pt-4 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
           <div>
-            <Eyebrow>Personal styling, in development</Eyebrow>
+            <div className="[@media(max-height:700px)]:hidden md:!block">
+              <Eyebrow>Personal styling, in development</Eyebrow>
+            </div>
             <h1
               id="hero-heading"
-              className="mt-5 font-display text-[clamp(2.75rem,7.2vw,5.75rem)] text-balance leading-[1.02] tracking-tight"
+              className="mt-3 font-display md:mt-5 text-[clamp(2.75rem,7.2vw,5.75rem)] text-balance leading-[1.02] tracking-tight"
             >
               Style that <em>feels like you.</em>
             </h1>
-            <p className="mt-6 max-w-md text-lg leading-8 text-stone lg:mt-8">
-              {brand.description}
+            <p className="mt-4 max-w-md text-base leading-7 text-stone md:mt-6 md:text-lg md:leading-8 lg:mt-8">
+              Find your personal style and get outfit ideas that fit your taste and budget.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row md:flex-col md:items-start lg:mt-10 xl:flex-row">
-              <ButtonLink href={stylistHref}>Discover My Style</ButtonLink>
-              <ButtonLink href="/#style-journal" variant="secondary">
-                Explore the Journal
+            <div className="mt-6 flex flex-col gap-3 md:mt-8 md:flex-col md:items-start lg:mt-10 xl:flex-row">
+              <ButtonLink href={stylistHref} className="w-full md:w-auto">
+                Discover My Style
               </ButtonLink>
+              {/* One clear action on phones; the Journal is one tap away in Explore. */}
+              <div className="hidden md:block">
+                <ButtonLink href="/#style-journal" variant="secondary">
+                  Explore the Journal
+                </ButtonLink>
+              </div>
             </div>
           </div>
 
           <Photo
             name="hero"
             sizes="(min-width: 768px) 50vw, 100vw"
-            className="aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5]"
+            className="order-first h-[34dvh] min-h-44 md:order-none md:h-auto md:aspect-[3/4] lg:aspect-[4/5]"
             position="50% 20%"
             preload
           />
@@ -151,7 +157,7 @@ export default function Home() {
         aria-labelledby="features-heading"
         className="scroll-mt-16 border-t border-sand lg:scroll-mt-20"
       >
-        <Container className="py-16 md:py-24 lg:py-32">
+        <Container className="py-12 md:py-24 lg:py-32">
           <div className="max-w-3xl">
             <Eyebrow>Featured services</Eyebrow>
             <h2 id="features-heading" className={sectionHeading}>
@@ -159,33 +165,42 @@ export default function Home() {
             </h2>
           </div>
 
-          <ul className="mt-10 grid gap-10 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-12">
+          {/* Phones: compact rows with a small photo. md and up: tall photo cards. */}
+          <ul className="mt-8 grid gap-6 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-12">
             <li>
-              <Link href={stylistHref} className="group block">
+              <Link href={stylistHref} className="group flex gap-4 md:block">
                 <Photo
                   name="colour"
-                  sizes="(min-width: 768px) 33vw, 100vw"
-                  className="aspect-[4/5]"
+                  sizes="(min-width: 768px) 33vw, 112px"
+                  className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
                 />
-                <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">Available</p>
-                <h3 className="mt-2 font-display text-3xl">Discover Your Style</h3>
-                <p className="mt-2 leading-7 text-stone">
-                  A short quiz that turns your taste, colours and occasions into outfit ideas.
-                </p>
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
+                  <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
+                    Discover Your Style
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
+                    A short quiz that turns your taste, colours and occasions into outfit ideas.
+                  </p>
+                </div>
               </Link>
             </li>
             <li>
-              <div>
+              <div className="flex gap-4 md:block">
                 <Photo
                   name="hair"
-                  sizes="(min-width: 768px) 33vw, 100vw"
-                  className="aspect-[4/5]"
+                  sizes="(min-width: 768px) 33vw, 112px"
+                  className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
                 />
-                <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">Coming soon</p>
-                <h3 className="mt-2 font-display text-3xl">Hair Studio</h3>
-                <p className="mt-2 leading-7 text-stone">
-                  Hairstyle inspiration shaped by your preferences and how much upkeep you want.
-                </p>
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Coming soon</p>
+                  <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
+                    Hair Studio
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
+                    Hairstyle inspiration shaped by your preferences and how much upkeep you want.
+                  </p>
+                </div>
               </div>
             </li>
             <li className="flex flex-col justify-end border-t border-espresso/20 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0 lg:pl-12">
@@ -211,7 +226,7 @@ export default function Home() {
         aria-labelledby="how-heading"
         className="scroll-mt-16 border-y border-sand bg-soft-white lg:scroll-mt-20"
       >
-        <Container className="py-16 md:py-24 lg:py-28">
+        <Container className="py-12 md:py-24 lg:py-28">
           <div className="max-w-2xl">
             <Eyebrow>How it will work</Eyebrow>
             <h2 id="how-heading" className={sectionHeading}>
@@ -241,7 +256,7 @@ export default function Home() {
 
       {/* Shop the Look: editorial looks that lead into Shop. They are inspiration, not products. */}
       <section id="shop-the-look" aria-labelledby="looks-heading" className="scroll-mt-16 lg:scroll-mt-20">
-        <Container className="py-16 md:py-24 lg:py-32">
+        <Container className="py-12 md:py-24 lg:py-32">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
             <div>
               <Eyebrow>Shop the Look</Eyebrow>
@@ -322,7 +337,7 @@ export default function Home() {
         aria-labelledby="journal-heading"
         className="scroll-mt-16 lg:scroll-mt-20"
       >
-        <Container className="py-16 md:py-24 lg:py-32">
+        <Container className="py-12 md:py-24 lg:py-32">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
             <div>
               <Eyebrow>Style Journal</Eyebrow>
@@ -357,10 +372,12 @@ export default function Home() {
             </li>
             <li className="lg:col-span-7">
               <ul>
-                {articles.slice(1).map((article) => (
+                {articles.slice(1).map((article, index) => (
                   <li
                     key={article.title}
-                    className="border-t border-sand py-6 first:border-t-0 first:pt-0 lg:first:border-t lg:first:pt-6"
+                    className={`border-t border-sand py-6 first:border-t-0 first:pt-0 lg:first:border-t lg:first:pt-6 ${
+                      index >= 2 ? "hidden md:block" : ""
+                    }`}
                   >
                     <article className="flex gap-5 md:gap-8">
                       <Photo

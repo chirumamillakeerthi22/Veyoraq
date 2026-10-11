@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/auth/account-menu";
-import { NavIconGlyph } from "@/components/sidebar/nav-icon";
-import { collectionLinks, isActiveLink, navLinks, type NavLink } from "@/lib/navigation";
+import { NavIconGlyph } from "@/components/nav-icon";
+import {
+  collectionLinks,
+  isActiveLink,
+  navLinks,
+  shopHref,
+  type NavLink,
+} from "@/lib/navigation";
 
 function TopLink({ link, active, withIcon }: { link: NavLink; active: boolean; withIcon: boolean }) {
   const text = link.shortLabel ?? link.label;
@@ -35,14 +41,19 @@ function TopLink({ link, active, withIcon }: { link: NavLink; active: boolean; w
   );
 }
 
-// Explore, Shop, Saved, Wishlist and the Account icon. Hidden below md, where the
-// drawer in mobile-nav.tsx shows the same destinations.
+/*
+  Right side of the header.
+  - md and up: Explore, Shop, Saved, Wishlist and the Account icon.
+  - Phones: just a Shop icon and the Account icon; the other destinations are in
+    the bottom bar (components/bottom-nav.tsx).
+*/
 export function HeaderNav() {
   const pathname = usePathname();
+  const shopActive = isActiveLink(pathname, shopHref);
 
   return (
-    <div className="hidden items-center gap-6 md:flex lg:gap-9">
-      <nav aria-label="Main">
+    <div className="flex items-center gap-1 md:gap-6 lg:gap-9">
+      <nav aria-label="Main" className="hidden md:block">
         <ul className="flex items-center gap-6 lg:gap-9">
           {[...navLinks, ...collectionLinks].map((link) => (
             <li key={link.href}>
@@ -55,7 +66,19 @@ export function HeaderNav() {
           ))}
         </ul>
       </nav>
-      <AccountMenu variant="header" />
+
+      <Link
+        href={shopHref}
+        aria-label="Shop"
+        aria-current={shopActive ? "page" : undefined}
+        className={`flex h-11 w-11 items-center justify-center transition-colors duration-200 md:hidden ${
+          shopActive ? "text-espresso" : "text-stone"
+        }`}
+      >
+        <NavIconGlyph name="shop" className="h-[1.375rem] w-[1.375rem]" />
+      </Link>
+
+      <AccountMenu />
     </div>
   );
 }

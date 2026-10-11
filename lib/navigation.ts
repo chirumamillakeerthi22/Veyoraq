@@ -1,4 +1,5 @@
 export type NavIcon =
+  | "home"
   | "discover"
   | "fix"
   | "hair"
@@ -47,6 +48,15 @@ export const navLinks: NavLink[] = [
     activeUnder: [stylistHref, fixMyStyleHref],
   },
   { label: "Shop", href: shopHref, icon: "shop" },
+];
+
+// The fixed bottom bar on phones. Shop stays reachable from the header icon and
+// from Explore, so the bar keeps to four destinations.
+export const bottomNavLinks: NavLink[] = [
+  { label: "Home", href: "/", icon: "home" },
+  { label: "Explore", href: exploreHref, icon: "discover", activeUnder: [stylistHref, fixMyStyleHref] },
+  collectionLinks[0],
+  collectionLinks[1],
 ];
 
 /*

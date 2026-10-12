@@ -1,47 +1,32 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
 import { Container } from "@/components/container";
-import { StylistFlow } from "@/components/stylist/stylist-flow";
-import { isStylistConfigured } from "@/lib/stylist/config";
+import { StyleQuiz } from "@/components/stylist/style-quiz";
 
 export const metadata: Metadata = {
   title: "Discover Your Style",
   description:
-    "Answer a few questions and get outfit ideas shaped around your occasion, style and budget.",
+    "A short, friendly style quiz that turns your taste, colours and occasions into outfit ideas.",
 };
 
+/*
+  The quiz always opens. Whether the AI service is available is checked at run time
+  (see /api/stylist/status) and explained inside the quiz, so a missing key or an
+  unconfigured deployment can never hide the quiz itself.
+*/
 export default function StylistPage() {
-  // Without an AI key the form could not produce anything, so don't offer it.
-  if (!isStylistConfigured()) {
-    return (
-      <ComingSoon
-        title={
-          <>
-            Discover your style, <em>soon.</em>
-          </>
-        }
-      >
-        The style questionnaire isn&rsquo;t open yet. Check back soon.
-      </ComingSoon>
-    );
-  }
-
   return (
-    <Container className="py-12 md:py-20">
-      <div className="max-w-2xl">
-        <p className="text-xs uppercase tracking-[0.22em] text-stone">
-          Discover Your Style
-        </p>
-        <h1 className="mt-4 font-display text-5xl leading-[1.05] md:text-6xl">
-          Tell us a little, <em>get ideas.</em>
+    <Container className="py-8 md:py-14">
+      <div className="mx-auto max-w-3xl">
+        <p className="text-xs uppercase tracking-[0.22em] text-stone">Discover Your Style</p>
+        <h1 className="mt-3 font-display text-4xl leading-[1.05] md:text-6xl">
+          Let&rsquo;s find <em>your look.</em>
         </h1>
-        <p className="mt-5 leading-7 text-stone">
-          Answer a few questions for up to three outfit ideas. Concepts only: no
-          products or prices, and nothing is saved.
+        <p className="mt-3 leading-7 text-stone">
+          A few quick questions, one at a time. Nothing is saved unless you choose to save a look.
         </p>
       </div>
-      <div className="mt-12">
-        <StylistFlow />
+      <div className="mt-8">
+        <StyleQuiz />
       </div>
     </Container>
   );

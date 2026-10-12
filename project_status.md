@@ -397,6 +397,47 @@ Verified (2026-10-11), production build, in a browser: widths 320, 360, 390, 430
 
 Not verified / not applicable: there is no photo upload or camera capture anywhere in the app (FIX My Style is a "coming soon" page), so nothing was built or tested there. Not tested on a real phone: safe-area insets on a notched device, on-screen keyboard behaviour in the sign-in dialog, iOS zoom behaviour. Keyboard Tab order and screen readers were not tested by hand. Signed-in states of the account menu, Saved Styles and Wishlist with real items were not exercised.
 
+### FIX My Style and Discover My Style redesign (branch `mobile-first-ux`, uncommitted)
+
+**FIX My Style** is now one purpose: upload a photo of an outfit, press "Style This Outfit", get a styled result. The earlier four-section wardrobe app (Overview, Add, Wardrobe, Style) and its two API routes were removed.
+
+- Upload surface: "Take a Photo" (camera capture where the device supports it, otherwise the file picker), "Upload Photo", preview, Replace and Remove. No camera permission is requested until the button is pressed. JPEG, PNG or WebP up to 15 MB, checked in the browser and again on the server by the file's own bytes. Photos are redrawn as a smaller JPEG, which drops metadata.
+- `POST /api/fix-my-style/style` (streamed): the text and vision model reads the photo and returns a validated analysis (items and colours, assessment, ways to restyle the same pieces, optional additions), shown at once. Then an image model is called only if configured.
+- Result layout: "Original Outfit" and "Your Styled Look" (stacked on phones, side by side from md), actions Style Again / Try Another Style / Save Look, then "Complete Your Look" split into "Already in your outfit" and "Consider adding". Additions are styling ideas, not products.
+- Save Look keeps the look in this browser (IndexedDB) and says so. It does not use the Supabase Saved Styles table, whose row shape cannot hold a photo. Account storage is PROPOSED in `supabase/proposed/fix_my_style_looks.sql` (not applied, not tested).
+
+**Discover My Style** is a step-by-step quiz (6 questions, one per screen, plus a review): looks (up to 3), colours (optional), occasions (up to 3), fit (optional), budget in INR ranges including "No new purchases for now", and anything else (optional). Progress indicator, Back, Continue, Skip, Edit from the review, answers kept while moving around. Results reuse the existing outfit boards and Saved Styles, and add a style-direction sentence, "Show me new ideas", "Adjust my answers", and a "Shop Your Style" section.
+
+- API contract change (`/api/stylist`): `occasion` became `occasions` (1 to 3); added optional `fit` and `considerations`; extra style, colour and occasion values; budget tier `none`; output gained `styleDirection`. Budget ranges live in `budgetOptions` in `lib/stylist/options.ts`.
+- Shop Your Style: `ProductCard` and the section are built against `lib/shop/product.ts`, but there is NO catalogue, so it shows plain styling guidance and says no products are connected. A record only counts as buyable with an https address and a priced currency.
+
+**Image generation (important):**
+- The configured model `gemini-3.5-flash-lite` reads images but cannot create them. It is never used for images.
+- The same key lists Google image models (for example `gemini-2.5-flash-image`), but on this free-tier key they return `429 RESOURCE_EXHAUSTED` immediately, so real image generation could not be tested and is NOT working.
+- It is therefore opt-in: it stays off until `GEMINI_IMAGE_MODEL` is set (see `.env.example`). It also needs billing enabled on the Google AI project; price per image is on Google's pricing page and was not checked here. The code path is covered by unit tests with a mocked API only.
+- When it is off or out of quota, the page says so and still shows the written advice. Nothing is faked.
+
+Verified (2026-10-12), production build, real browser, real Gemini text and vision: photo upload with preview; validation (wrong type, over 15 MB, damaged file); no-outfit photo; Replace and Remove; Style This Outfit streamed result in about 2.5 s; honest "not switched on" and "not available on the current plan" image panels (the second against the real quota error); Save Look, persistence across reload and re-open; the quiz (limits, required and optional steps, Back keeps answers, Skip, review, Edit, real generation of three outfits). No horizontal overflow on either page at 320, 360, 430, 768, 1024 and 1440 px (390 px was checked functionally); first-screen actions above the bottom bar at 320x640.
+
+Not verified: real image generation; a real phone camera (the file input was driven by script); safe-area and keyboard behaviour on a device; Safari and Firefox; screen reader and keyboard walk-through by hand; the Supabase SQL (never run).
+
+### Fix round: quiz "not available" and FIX My Style images (branch `mobile-first-ux`, uncommitted)
+
+**Cause of the quiz "not available" state.** `app/stylist/page.tsx` replaced the whole quiz with a "coming soon" page whenever `GEMINI_API_KEY` was missing, and the page is a static build, so the decision was frozen at build time. Production has the key and serves the quiz. Branch previews do not: the key was moved to the Production environment only, so a preview build bakes in the unavailable page. (The Vercel preview is behind login and could not be opened; this is inferred from the code and the environment history, not observed there.)
+
+**Fix.** The quiz always opens. A new `GET /api/stylist/status` (read at request time, returns only two booleans) tells the page what is available; the quiz shows a notice and explains it if results cannot be made. The same endpoint stops "images configured" from being frozen at build time.
+
+**Cause of no generated image.** Two separate facts, both verified against the live API with this key:
+1. The configured model (`gemini-3.5-flash-lite`) reads images but cannot create them.
+2. Every image model the key lists (8 of 8, including `gemini-2.5-flash-image`) returns `429 RESOURCE_EXHAUSTED` immediately. Image generation is not part of the free tier. On top of that, `GEMINI_IMAGE_MODEL` is intentionally unset, so the site correctly reports "not switched on".
+Real image generation therefore does NOT work yet and cannot until billing is enabled; there is no free route. When it fails, the page says so and offers Retry where retrying can help.
+
+**Waiting animation.** `StylingProgress` (three captions plus a still-line for reduced motion) is shown only while a request is running, is labelled "Nothing has been generated yet", and disappears when the request ends. It is never shown as a result, and nothing is simulated.
+
+Verified (2026-10-12), production build, real browser: with no key (port 3102) the quiz opens, shows the notice, completes, and explains that looks cannot be created, answers kept; FIX My Style accepts a photo and disables Style This Outfit with a reason; with a key (port 3100) the animation shows only during the request and the written advice appears; with an image model chosen (port 3101) the real quota error is shown with a working Retry, and quiz outfits show "Create image" which reports the same honestly; the request sent by the quiz contains the chosen (and edited) answers and the outfits reflect them. No horizontal overflow at 375, 768, 1024 and 1440 px on either page.
+
+Not verified: real image generation (no quota); the Vercel preview itself (login-protected); a real phone camera.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

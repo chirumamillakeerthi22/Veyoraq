@@ -98,14 +98,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SoonTag() {
-  return (
-    <span className="inline-block border border-espresso/25 px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.18em] text-stone">
-      Coming soon
-    </span>
-  );
-}
-
 const sectionHeading =
   "mt-4 font-display text-4xl leading-[1.08] md:text-5xl lg:text-6xl";
 
@@ -312,7 +304,9 @@ export default function Home() {
             className="aspect-square md:aspect-[4/5]"
           />
           <div>
-            <SoonTag />
+            <span className="inline-block border border-espresso/25 px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.18em] text-stone">
+              Available now
+            </span>
             <p className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
               FIX My Style
             </p>
@@ -322,10 +316,10 @@ export default function Home() {
             <p className="mt-6 max-w-md text-lg leading-8 text-stone">
               Your wardrobe has more possibilities than you think. Explore
               fresh combinations, thoughtful layering, and new ways to style
-              your favourite pieces.
+              your favourite pieces. Upload a photo of your outfit to begin.
             </p>
             <ButtonLink href={fixMyStyleHref} className="mt-8 w-full sm:w-auto">
-              Explore FIX My Style
+              Open FIX My Style
             </ButtonLink>
           </div>
         </Container>

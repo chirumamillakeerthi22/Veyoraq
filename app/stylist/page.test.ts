@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ComingSoon } from "@/components/coming-soon";
-import { StylistFlow } from "@/components/stylist/stylist-flow";
+import { StyleQuiz } from "@/components/stylist/style-quiz";
 import StylistPage from "./page";
 
 // Collects the component types used anywhere in a returned React element tree.
@@ -18,22 +18,17 @@ function typesIn(node: unknown, found: unknown[] = []): unknown[] {
 describe("/stylist page", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("shows the coming-soon page, not the form, when the key is missing", () => {
+  it("always shows the quiz, even when the AI key is missing", () => {
     vi.stubEnv("GEMINI_API_KEY", "");
     const types = typesIn(StylistPage());
-    expect(types).toContain(ComingSoon);
-    expect(types).not.toContain(StylistFlow);
+    expect(types).toContain(StyleQuiz);
+    expect(types).not.toContain(ComingSoon);
   });
 
-  it("treats a whitespace-only key as missing", () => {
-    vi.stubEnv("GEMINI_API_KEY", "   ");
-    expect(typesIn(StylistPage())).toContain(ComingSoon);
-  });
-
-  it("shows the form when a key is set", () => {
+  it("shows the quiz when a key is set", () => {
     vi.stubEnv("GEMINI_API_KEY", "test-key");
     const types = typesIn(StylistPage());
-    expect(types).toContain(StylistFlow);
+    expect(types).toContain(StyleQuiz);
     expect(types).not.toContain(ComingSoon);
   });
 });

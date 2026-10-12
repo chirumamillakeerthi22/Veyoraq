@@ -1,24 +1,17 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/components/coming-soon";
+import { Container } from "@/components/container";
+import { OutfitStylist } from "@/components/fix-my-style/outfit-stylist";
 
 export const metadata: Metadata = {
   title: "FIX My Style",
-  description: "FIX My Style is in development.",
+  description:
+    "Upload a photo of your outfit and get better ways to wear the clothes you already own.",
 };
 
-// Placeholder: wardrobe uploads and outfit combinations have not been built yet.
 export default function FixMyStylePage() {
   return (
-    <ComingSoon
-      title={
-        <>
-          FIX My Style, <em>soon.</em>
-        </>
-      }
-    >
-      Adding pieces from your wardrobe and exploring new combinations
-      isn&rsquo;t available yet. There is no upload here for now, and nothing
-      is collected.
-    </ComingSoon>
+    <Container className="py-6 md:py-14">
+      <OutfitStylist />
+    </Container>
   );
 }

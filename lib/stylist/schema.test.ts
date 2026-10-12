@@ -14,7 +14,11 @@ describe("stylistInputSchema", () => {
   });
 
   it.each([
-    ["unknown occasion", { occasion: "gala" }],
+    ["unknown occasion", { occasions: ["gala"] }],
+    ["no occasions", { occasions: [] }],
+    ["too many occasions", { occasions: ["everyday", "work", "travel", "party"] }],
+    ["unknown fit", { fit: "baggy" }],
+    ["unknown preference", { considerations: ["lose-weight"] }],
     ["no styles", { styles: [] }],
     ["too many styles", { styles: ["minimal", "classic", "relaxed", "bold"] }],
     ["duplicate styles", { styles: ["minimal", "minimal"] }],
@@ -37,7 +41,7 @@ describe("stylistOutputSchema", () => {
   it("rejects extra fields such as a price", () => {
     const outfit = { ...validOutput.outfits[0], price: 4999 };
     expect(
-      stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
+      stylistOutputSchema.safeParse({ ...validOutput, outfits: [outfit] }).success,
     ).toBe(false);
   });
 
@@ -50,7 +54,7 @@ describe("stylistOutputSchema", () => {
     const outfit = structuredClone(validOutput.outfits[0]);
     outfit.pieces[0].description = description;
     expect(
-      stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
+      stylistOutputSchema.safeParse({ ...validOutput, outfits: [outfit] }).success,
     ).toBe(false);
   });
 
@@ -58,34 +62,34 @@ describe("stylistOutputSchema", () => {
     const outfit = structuredClone(validOutput.outfits[0]);
     outfit.palette[0].hex = "beige";
     expect(
-      stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
+      stylistOutputSchema.safeParse({ ...validOutput, outfits: [outfit] }).success,
     ).toBe(false);
   });
 
   it("requires a valid hex colour on every piece", () => {
     const bad = structuredClone(validOutput.outfits[0]);
     bad.pieces[0].hex = "ivory";
-    expect(stylistOutputSchema.safeParse({ outfits: [bad] }).success).toBe(false);
+    expect(stylistOutputSchema.safeParse({ ...validOutput, outfits: [bad] }).success).toBe(false);
 
     const missing = structuredClone(validOutput.outfits[0]) as unknown as {
       pieces: Record<string, unknown>[];
     };
     delete missing.pieces[0].hex;
-    expect(stylistOutputSchema.safeParse({ outfits: [missing] }).success).toBe(false);
+    expect(stylistOutputSchema.safeParse({ ...validOutput, outfits: [missing] }).success).toBe(false);
   });
 
   it("rejects text that has grown long again", () => {
     const outfit = structuredClone(validOutput.outfits[0]);
     outfit.whyItWorks = "word ".repeat(60);
     expect(
-      stylistOutputSchema.safeParse({ outfits: [outfit] }).success,
+      stylistOutputSchema.safeParse({ ...validOutput, outfits: [outfit] }).success,
     ).toBe(false);
   });
 
   it("rejects more than three outfits", () => {
     const outfit = validOutput.outfits[0];
     expect(
-      stylistOutputSchema.safeParse({ outfits: [outfit, outfit, outfit, outfit] })
+      stylistOutputSchema.safeParse({ ...validOutput, outfits: [outfit, outfit, outfit, outfit] })
         .success,
     ).toBe(false);
   });

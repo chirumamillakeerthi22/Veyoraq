@@ -118,6 +118,7 @@ describe("generateOutfits (Gemini)", () => {
 
   it("rejects output that fails validation", async () => {
     const withPrice = {
+      ...validOutput,
       outfits: [{ ...validOutput.outfits[0], price: 100 }],
     };
     fetchMock.mockResolvedValue(

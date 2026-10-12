@@ -14,7 +14,9 @@ import {
 
 const outfit = validOutput.outfits[0];
 const answers: SavedAnswers = {
-  occasion: "work",
+  occasions: ["work"],
+  fit: null,
+  considerations: [],
   styles: ["minimal", "classic"],
   colours: ["neutrals"],
   budgetTier: "mid",

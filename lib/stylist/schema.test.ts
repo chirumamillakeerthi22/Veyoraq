@@ -26,10 +26,16 @@ describe("stylistInputSchema", () => {
     ["unknown currency", { currency: "JPY" }],
     ["notes too long", { notes: "a".repeat(301) }],
     ["unexpected field", { extra: "x" }],
+    ["unknown audience", { audience: "everyone" }],
   ])("rejects %s", (_label, patch) => {
     expect(
       stylistInputSchema.safeParse({ ...validInput, ...patch }).success,
     ).toBe(false);
+  });
+
+  it("accepts a known audience and works without one", () => {
+    expect(stylistInputSchema.safeParse({ ...validInput, audience: "men" }).success).toBe(true);
+    expect(stylistInputSchema.safeParse(validInput).success).toBe(true);
   });
 });
 

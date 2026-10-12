@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   photoUrl,
@@ -39,31 +40,21 @@ import {
   type ColourAnswers,
   type ColourStepId,
 } from "@/lib/color-analysis/quiz";
+import { colourDraft } from "@/lib/color-analysis/draft";
 import {
   analysisSchema,
-  emptyColourDraft,
   hasUsablePalette,
   seasonLabels,
-  validateColourDraft,
   type ColourAnalysis,
   type ColourStage,
   type Swatch,
 } from "@/lib/color-analysis/schema";
 import { colourReportsStore, useColourReports } from "@/lib/color-analysis/use-colour-reports";
 import { blobToBase64, prepareImage, validateFile } from "@/lib/fix-my-style/image";
-import { createDraftStore } from "@/lib/persist/draft";
 import { filterProducts, noFilters } from "@/lib/shop/match";
 import type { Product } from "@/lib/shop/product";
 
 /* ---------- state ---------- */
-
-// Answers, step and the finished result survive a refresh. The photo never does.
-const colourDraft = createDraftStore({
-  key: "veyoraq:draft:color-analysis",
-  version: 1,
-  initial: emptyColourDraft,
-  validate: validateColourDraft,
-});
 
 type Run =
   | { phase: "idle" }
@@ -258,7 +249,10 @@ export function ColourAnalysisTool() {
   const stylingUnavailable = ai.state === "ready" && !ai.text;
   // After a refresh the photo is gone, so a quiz in progress goes back to the photo
   // screen first (answers and step are kept).
-  const shown: ColourStage = stage === "quiz" && !(photo && confirmed) ? "photo" : stage;
+  // The old separate "guidance" screen now lives on the photo screen (older drafts
+  // may still hold that stage).
+  const shown: ColourStage =
+    stage === "guidance" || (stage === "quiz" && !(photo && confirmed)) ? "photo" : stage;
   const busy = preparing || run.phase === "analysing";
 
   /* ----- photo ----- */
@@ -714,7 +708,7 @@ export function ColourAnalysisTool() {
             onClick={() => void saveReport(result)}
             className={secondaryButton}
           >
-            {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Results saved" : "Save My Results"}
+            {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Color Analysis saved" : "Save My Color Analysis"}
           </button>
           <button type="button" onClick={startOver} className={secondaryButton}>
             Retake Analysis
@@ -725,13 +719,18 @@ export function ColourAnalysisTool() {
             {signedIn
               ? "Saved to your account. It holds your palette and report, not your photo."
               : "Saved on this device only. It holds your palette and report, not your photo."}
+            {" "}
+            <Link href="/saved#color-analysis" className="underline underline-offset-4">
+              View in Saved
+            </Link>
+            .
             {!signedIn && (
               <>
                 {" "}
-                <a href="/account" className="underline underline-offset-4">
-                  Sign in
-                </a>{" "}
-                to keep your reports in your account.
+                <Link href="/account" target="_blank" rel="noopener" className="underline underline-offset-4">
+                  Sign in (new tab)
+                </Link>{" "}
+                to keep your reports in your account. This result stays on this page.
               </>
             )}
           </p>
@@ -780,7 +779,7 @@ export function ColourAnalysisTool() {
         <div className="mt-8 max-w-2xl">
           <button
             type="button"
-            onClick={() => patch({ stage: "guidance" })}
+            onClick={() => patch({ stage: "photo" })}
             className={`${primaryButton} w-full sm:w-auto`}
           >
             Discover My Colors
@@ -837,84 +836,6 @@ export function ColourAnalysisTool() {
     );
   }
 
-  // Photo guidance
-  if (shown === "guidance") {
-    return (
-      <div>
-        <header className="max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-stone">Step 1 of 3</p>
-          <h1 ref={headingRef} tabIndex={-1} className="mt-3 font-display text-4xl leading-[1.05] outline-none sm:text-5xl md:text-6xl">
-            Let’s Get Your Best Photo
-          </h1>
-          <p className="mt-4 text-base leading-7 text-stone md:text-lg md:leading-8">
-            A clear, naturally lit photo helps us estimate your coloring more consistently.
-          </p>
-        </header>
-
-        <ol className="mt-8 grid gap-4 md:grid-cols-2">
-          {[
-            ["Find soft daylight", ["Stand facing a large window during the day.", "Use bright, indirect natural daylight.", "Let light fall evenly across the face.", "Avoid direct sunlight and harsh shadows."]],
-            ["Choose a simple background", ["Use a plain white, grey or beige wall.", "If possible, wear a neutral-colored top.", "Avoid brightly colored lighting and reflective backgrounds."]],
-            ["Face the camera", ["Position the camera at eye level.", "Capture the entire face and the top of the shoulders.", "Keep hair away from the face when practical.", "Keep the face in focus."]],
-            ["Keep colors natural", ["Turn off beauty filters and color effects.", "Avoid heavy foundation when convenient.", "Remove tinted glasses if comfortable.", "Avoid yellow indoor lighting and colored light sources."]],
-          ].map(([title, items], i) => (
-            <li key={title as string} className="border border-sand bg-soft-white p-5">
-              <p className="flex items-center gap-3 font-display text-2xl leading-7">
-                <span aria-hidden="true" className="text-olive">{i + 1}</span>
-                {title as string}
-              </p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-stone">
-                {(items as string[]).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <section aria-label="Do" className="border border-espresso/30 p-5">
-            <p className="font-display text-2xl leading-7">Do</p>
-            <ul className="mt-2 space-y-1 text-sm leading-6">
-              {["Even, indirect daylight", "A front-facing, clear image", "Natural-looking skin color", "Neutral surroundings"].map((t) => (
-                <li key={t}>
-                  <span aria-hidden="true">✓ </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section aria-label="Avoid" className="border border-dashed border-espresso/40 p-5">
-            <p className="font-display text-2xl leading-7">Avoid</p>
-            <ul className="mt-2 space-y-1 text-sm leading-6">
-              {["Strong shadows", "Dark or blurry images", "Beauty filters", "Warm yellow bulbs or colored lighting"].map((t) => (
-                <li key={t}>
-                  <span aria-hidden="true">✕ </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-
-        <p className="mt-6 max-w-2xl text-sm leading-6 text-stone">
-          <span className="font-medium text-espresso">Tip: </span>
-          Daylight varies throughout the day. Aim for soft, even light rather than a specific time.
-        </p>
-        <div className="mt-2 max-w-2xl">{estimateNote}</div>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <button type="button" onClick={() => patch({ stage: "photo" })} className={primaryButton}>
-            Take or Upload My Photo
-          </button>
-          <button type="button" onClick={() => patch({ stage: "intro" })} className={secondaryButton}>
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Photo upload and preview
   if (shown === "photo") {
     const resuming = stage === "quiz" && !photo;
@@ -922,11 +843,31 @@ export function ColourAnalysisTool() {
       <div>
         {inputs}
         <header className="max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-stone">Step 2 of 3</p>
-          <h1 ref={headingRef} tabIndex={-1} className="mt-3 font-display text-4xl leading-[1.05] outline-none sm:text-5xl md:text-6xl">
-            Your photo
+          <h1 ref={headingRef} tabIndex={-1} className="font-display text-3xl leading-[1.05] outline-none sm:text-4xl md:text-5xl">
+            Get Your Best Color Analysis
           </h1>
+          <p className="mt-2 text-sm leading-6 text-stone md:text-base md:leading-7">
+            A clear photo in natural light helps us estimate your personal color palette.
+          </p>
         </header>
+
+        <ol className="mt-4 grid gap-2 md:grid-cols-3">
+          {[
+            ["Face a window", "Soft daylight works best. Avoid harsh sunlight or shadows."],
+            ["Keep it natural", "Turn off beauty filters. Avoid heavy makeup if convenient."],
+            ["Face the camera", "Use a clear, front-facing photo with your face fully visible."],
+          ].map(([title, text], i) => (
+            <li key={title} className="flex gap-3 border border-sand bg-soft-white p-3">
+              <span aria-hidden="true" className="font-display text-2xl leading-7 text-olive">
+                {i + 1}
+              </span>
+              <span className="text-sm leading-5">
+                <span className="block font-medium">{title}</span>
+                <span className="text-stone">{text}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
 
         {(restored || resuming) && resuming && (
           <p role="status" className="mt-4 max-w-2xl border border-espresso/40 bg-soft-white p-4 text-sm leading-6">
@@ -935,7 +876,7 @@ export function ColourAnalysisTool() {
           </p>
         )}
 
-        <section aria-label="Photo" className="mt-6 grid gap-6 md:grid-cols-12 md:items-start md:gap-10">
+        <section aria-label="Photo" className="mt-4 grid gap-4 md:grid-cols-12 md:items-start md:gap-10">
           <div className="md:col-span-6 lg:col-span-5">
             <div
               onDragOver={(e) => {
@@ -949,7 +890,7 @@ export function ColourAnalysisTool() {
                 void choose(e.dataTransfer.files[0]);
               }}
               className={`relative w-full overflow-hidden border ${
-                photo ? "aspect-[4/5] max-h-[62dvh] border-sand bg-sand md:max-h-none" : `aspect-[3/2] md:aspect-[4/5] ${dragging ? "border-dashed border-espresso bg-sand/60" : "border-dashed border-espresso/40 bg-soft-white"}`
+                photo ? "aspect-[4/5] max-h-[45dvh] border-sand bg-sand md:max-h-none" : `aspect-[3/1] md:aspect-[4/5] ${dragging ? "border-dashed border-espresso bg-sand/60" : "border-dashed border-espresso/40 bg-soft-white"}`
               }`}
             >
               {photo ? (
@@ -957,8 +898,7 @@ export function ColourAnalysisTool() {
                 <img src={photoUrl(photo)} alt="The photo you chose" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-                  <p className="font-display text-2xl leading-7">Add a clear photo of your face</p>
-                  <p className="max-w-xs text-sm leading-6 text-stone">Take one now or choose one you’ve taken.</p>
+                  <p className="font-display text-xl leading-7 md:text-2xl">Add a clear photo of your face</p>
                 </div>
               )}
               {preparing && (
@@ -968,7 +908,7 @@ export function ColourAnalysisTool() {
               )}
             </div>
 
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row md:flex-col lg:flex-row">
+            <div className="mt-3 flex flex-row gap-3 md:flex-col lg:flex-row">
               {photo ? (
                 <>
                   <button type="button" disabled={busy} onClick={() => cameraInput.current?.click()} className={`${secondaryButton} flex-1`}>
@@ -987,12 +927,12 @@ export function ColourAnalysisTool() {
                     Take a Photo
                   </button>
                   <button type="button" disabled={busy} onClick={() => libraryInput.current?.click()} className={`${secondaryButton} flex-1`}>
-                    Upload Photo
+                    Upload a Photo
                   </button>
                 </>
               )}
             </div>
-            <p className="mt-3 text-xs leading-5 text-stone">JPEG, PNG or WebP, up to 15 MB. If your device doesn’t open the camera, choose Upload Photo.</p>
+            <p className="mt-2 text-xs leading-5 text-stone">JPEG, PNG or WebP, up to 15 MB.</p>
             {problem && (
               <p role="alert" className="mt-3 border border-espresso p-3 text-sm leading-6">
                 {problem}
@@ -1013,14 +953,12 @@ export function ColourAnalysisTool() {
                 <p className="mt-2 text-sm leading-6 text-stone">You can continue anyway, or retake it for a steadier estimate.</p>
               </div>
             )}
-            <h2 className="font-display text-2xl leading-8">How your photo is used</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-stone">
-              <li>It stays on your device until you press Analyze My Colors.</li>
-              <li>Then it is sent securely to Google’s Gemini to estimate your colouring.</li>
-              <li>VEYORAQ doesn’t store or keep it, and it isn’t saved with your results.</li>
-              <li>If you save results, only the palette and report are kept, on this device. Delete them any time, or press Start Over.</li>
-            </ul>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <p className="text-xs leading-5 text-stone">
+              <span className="font-medium text-espresso">Privacy: </span>
+              Your photo stays on your device until you analyse it, is then sent securely to
+              Google’s Gemini, and is never stored by VEYORAQ or saved with your results.
+            </p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 disabled={!photo || busy}
@@ -1032,7 +970,7 @@ export function ColourAnalysisTool() {
               >
                 Continue to My Color Quiz
               </button>
-              <button type="button" onClick={() => patch({ stage: "guidance" })} className={secondaryButton}>
+              <button type="button" onClick={() => patch({ stage: "intro" })} className={secondaryButton}>
                 Back
               </button>
             </div>

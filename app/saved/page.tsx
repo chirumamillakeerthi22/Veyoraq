@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/container";
+import { SavedColourReports } from "@/components/saved/saved-colour-reports";
 import { SavedList } from "@/components/saved/saved-list";
+import { SavedTabs } from "@/components/saved/saved-tabs";
 
 export const metadata: Metadata = {
   title: "Saved Styles",
@@ -22,7 +24,7 @@ export default function SavedPage() {
         </p>
       </div>
       <div className="mt-10">
-        <SavedList />
+        <SavedTabs outfits={<SavedList />} colour={<SavedColourReports />} />
       </div>
     </Container>
   );

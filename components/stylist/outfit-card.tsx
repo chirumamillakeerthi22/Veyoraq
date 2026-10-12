@@ -6,15 +6,20 @@ type OutfitCardProps = {
   outfit: Outfit;
   // Actions shown under the card, such as Save or Remove.
   children?: React.ReactNode;
+  // Controls laid over the top-right of the image, such as a quick-save bookmark.
+  overlay?: React.ReactNode;
 };
 
 // One outfit: its illustrated board, a short summary, the pieces, and the details.
 // Shared by the results page and the Saved Styles page.
-export function OutfitCard({ outfit, children }: OutfitCardProps) {
+export function OutfitCard({ outfit, children, overlay }: OutfitCardProps) {
   return (
     <article>
-      <div className="overflow-hidden border border-sand">
-        <OutfitBoard outfit={outfit} />
+      <div className="relative">
+        <div className="overflow-hidden border border-sand">
+          <OutfitBoard outfit={outfit} />
+        </div>
+        {overlay}
       </div>
 
       <h3 className="mt-5 font-display text-3xl leading-tight">{outfit.name}</h3>

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { AudienceBar } from "@/components/audience-selector";
 import { ButtonLink } from "@/components/button-link";
+import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/container";
 import { Photo } from "@/components/photo";
 import { exploreHref, fixMyStyleHref, hairStudioHref, shopHref, stylistHref } from "@/lib/navigation";
@@ -104,6 +106,8 @@ const sectionHeading =
 export default function Home() {
   return (
     <>
+      <AudienceBar />
+
       {/* Hero */}
       <section aria-labelledby="hero-heading">
         <Container className="grid gap-6 pb-10 pt-4 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
@@ -424,6 +428,8 @@ export default function Home() {
           </ButtonLink>
         </Container>
       </section>
+
+      <SiteFooter />
     </>
   );
 }

@@ -3,7 +3,49 @@ import { Container } from "@/components/container";
 import { brand } from "@/lib/brand";
 import { footerGroups } from "@/lib/navigation";
 
-export function SiteFooter() {
+type SiteFooterProps = {
+  // "full" is the editorial footer for the homepage and discovery pages. "compact"
+  // is a single slim line for focused tools, so they stay short.
+  variant?: "full" | "compact";
+};
+
+const companyLinks = footerGroups.find((group) => group.title === "Company")?.links ?? [];
+
+function CompactFooter() {
+  return (
+    <footer className="border-t border-sand bg-ivory">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-4 text-xs tracking-wide text-stone sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+        <p>© 2026 {brand.name}</p>
+        <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-1">
+          <Link href="/" className="inline-flex min-h-11 items-center px-2 hover:text-espresso">
+            Home
+          </Link>
+          {companyLinks.map((link) =>
+            link.href ? (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="inline-flex min-h-11 items-center px-2 hover:text-espresso"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <span key={link.label} className="inline-flex min-h-11 items-center gap-1 px-2">
+                {link.label}
+                <span className="border border-espresso/20 px-1 text-[0.5625rem] uppercase tracking-[0.12em]">
+                  Soon
+                </span>
+              </span>
+            ),
+          )}
+        </nav>
+      </div>
+    </footer>
+  );
+}
+
+export function SiteFooter({ variant = "full" }: SiteFooterProps) {
+  if (variant === "compact") return <CompactFooter />;
   return (
     <footer className="border-t border-sand bg-ivory">
       <Container className="py-12 md:py-16">

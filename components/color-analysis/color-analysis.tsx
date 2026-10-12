@@ -11,6 +11,7 @@ import {
 import { QuizActions } from "@/components/quiz-actions";
 import { OptionCard } from "@/components/stylist/option-card";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
+import { useAuthState } from "@/lib/auth/use-auth";
 import {
   assessPhoto,
   detectFace,
@@ -212,6 +213,8 @@ function SwatchGroup({
 
 export function ColourAnalysisTool() {
   const ai = useAiStatus();
+  const auth = useAuthState();
+  const signedIn = auth.status === "signed-in";
   const reports = useColourReports();
   const draft = useSyncExternalStore(
     colourDraft.subscribe,
@@ -719,8 +722,18 @@ export function ColourAnalysisTool() {
         </section>
         {saveState === "saved" && (
           <p role="status" className="-mt-8 text-sm leading-6 text-stone">
-            Saved on this device only. It holds your palette and report, not your photo. Saving to
-            your account isn’t available yet.
+            {signedIn
+              ? "Saved to your account. It holds your palette and report, not your photo."
+              : "Saved on this device only. It holds your palette and report, not your photo."}
+            {!signedIn && (
+              <>
+                {" "}
+                <a href="/account" className="underline underline-offset-4">
+                  Sign in
+                </a>{" "}
+                to keep your reports in your account.
+              </>
+            )}
           </p>
         )}
         {saveState === "error" && (
@@ -783,7 +796,9 @@ export function ColourAnalysisTool() {
             <h2 id="saved-reports" className="font-display text-3xl leading-tight">
               Your saved colour reports
             </h2>
-            <p className="mt-1 text-sm text-stone">Kept on this device only. No photo is stored.</p>
+            <p className="mt-1 text-sm text-stone">
+              {signedIn ? "Kept in your account." : "Kept on this device only."} No photo is stored.
+            </p>
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {reports.looks.map((report) => (
                 <li key={report.id} className="border border-sand bg-soft-white p-4">

@@ -42,9 +42,11 @@ export type DbErrorLike =
 export function toSavedAnswers(answers: SavedAnswers | null): SavedAnswers | null {
   if (!answers) return null;
   return {
-    occasion: answers.occasion,
+    occasions: [...answers.occasions],
     styles: [...answers.styles],
     colours: [...answers.colours],
+    fit: answers.fit,
+    considerations: [...answers.considerations],
     budgetTier: answers.budgetTier,
     currency: answers.currency,
   };

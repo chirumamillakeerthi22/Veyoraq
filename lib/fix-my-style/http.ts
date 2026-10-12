@@ -1,24 +1,38 @@
 import { createRateLimiter } from "@/lib/stylist/rate-limit";
-import type { FixErrorCode } from "./schema";
 
-// Shared pieces for the two FIX My Style API routes.
+export type FixErrorCode =
+  | "invalid_input"
+  | "forbidden"
+  | "too_large"
+  | "unsupported_image"
+  | "not_configured"
+  | "rate_limited"
+  | "timeout"
+  | "refused"
+  | "incomplete"
+  | "invalid_output"
+  | "upstream_error";
+
+// Shared pieces for the FIX My Style API route.
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
 // Per visitor, in memory (a best-effort guard; the shared protection is the Vercel
-// Firewall rule and the Gemini key quota, as for the outfit stylist).
-export const analyzeLimiter = createRateLimiter({
+// Firewall rule and the Gemini key quota, as for the outfit stylist). Image
+// generation is the costly step, so the allowance is small.
+export const styleLimiter = createRateLimiter({
   rules: [
-    { windowMs: 10 * MINUTE, max: 20 },
-    { windowMs: DAY, max: 80 },
+    { windowMs: 10 * MINUTE, max: 6 },
+    { windowMs: DAY, max: 30 },
   ],
 });
 
-export const outfitsLimiter = createRateLimiter({
+// Pictures for quiz outfits (text only, no photo). Also a costly step.
+export const imageLimiter = createRateLimiter({
   rules: [
-    { windowMs: 10 * MINUTE, max: 10 },
-    { windowMs: DAY, max: 40 },
+    { windowMs: 10 * MINUTE, max: 6 },
+    { windowMs: DAY, max: 30 },
   ],
 });
 
@@ -34,7 +48,6 @@ const statusByCode: Record<FixErrorCode, number> = {
   incomplete: 502,
   invalid_output: 502,
   upstream_error: 502,
-  no_combinations: 422,
 };
 
 export function errorResponse(

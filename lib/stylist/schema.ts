@@ -2,7 +2,9 @@ import { z } from "zod";
 import {
   budgetTierValues,
   colourValues,
+  considerationValues,
   currencyValues,
+  fitValues,
   limits,
   occasionValues,
   pieceCategoryValues,
@@ -14,7 +16,11 @@ const unique = (values: readonly string[]) =>
 
 export const stylistInputSchema = z
   .object({
-    occasion: z.enum(occasionValues),
+    occasions: z
+      .array(z.enum(occasionValues))
+      .min(1)
+      .max(limits.occasions)
+      .refine(unique, "Choose each occasion once"),
     styles: z
       .array(z.enum(styleValues))
       .min(1)
@@ -24,6 +30,12 @@ export const stylistInputSchema = z
       .array(z.enum(colourValues))
       .max(limits.colours)
       .refine(unique, "Choose each colour group once"),
+    // Optional in the quiz, so "not chosen" is null rather than a made-up default.
+    fit: z.enum(fitValues).nullable(),
+    considerations: z
+      .array(z.enum(considerationValues))
+      .max(limits.considerations)
+      .refine(unique, "Choose each preference once"),
     budgetTier: z.enum(budgetTierValues),
     currency: z.enum(currencyValues),
     notes: z.string().trim().max(limits.notes),
@@ -95,6 +107,8 @@ export type Outfit = z.infer<typeof outfitSchema>;
 
 export const stylistOutputSchema = z
   .object({
+    // One friendly sentence about the style direction the person described.
+    styleDirection: text(160),
     outfits: z.array(outfitSchema).min(1).max(limits.outfits),
   })
   .strict();

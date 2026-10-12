@@ -1,4 +1,4 @@
-import { acceptedImageTypes, limits } from "./options";
+import { acceptedImageTypes, limits } from "./limits";
 
 /*
   Browser-only photo handling. Every photo is redrawn onto a canvas and saved again
@@ -83,10 +83,7 @@ function toJpeg(canvas: HTMLCanvasElement): Promise<Blob | null> {
 
 const INVALID = "We couldn't read that image. It may be damaged. Please try another photo.";
 
-// Optional crop, as fractions of the image (0 to 1).
-export type CropRect = { x: number; y: number; width: number; height: number };
-
-export async function prepareImage(blob: Blob, crop?: CropRect): Promise<PrepareResult> {
+export async function prepareImage(blob: Blob): Promise<PrepareResult> {
   let decoded;
   try {
     decoded = await decode(blob);
@@ -95,17 +92,12 @@ export async function prepareImage(blob: Blob, crop?: CropRect): Promise<Prepare
   }
 
   try {
-    const sx = crop ? Math.round(crop.x * decoded.width) : 0;
-    const sy = crop ? Math.round(crop.y * decoded.height) : 0;
-    const sw = crop ? Math.max(1, Math.round(crop.width * decoded.width)) : decoded.width;
-    const sh = crop ? Math.max(1, Math.round(crop.height * decoded.height)) : decoded.height;
-    if (sw < 32 || sh < 32) {
-      return { ok: false, message: "That area is too small. Please select a larger part of the photo." };
+    const scale = Math.min(1, limits.longEdgePixels / Math.max(decoded.width, decoded.height));
+    const width = Math.max(1, Math.round(decoded.width * scale));
+    const height = Math.max(1, Math.round(decoded.height * scale));
+    if (width < 32 || height < 32) {
+      return { ok: false, message: "That photo is too small to use. Please choose a larger one." };
     }
-
-    const scale = Math.min(1, limits.longEdgePixels / Math.max(sw, sh));
-    const width = Math.max(1, Math.round(sw * scale));
-    const height = Math.max(1, Math.round(sh * scale));
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -116,7 +108,7 @@ export async function prepareImage(blob: Blob, crop?: CropRect): Promise<Prepare
     // JPEG has no transparency, so transparent PNG areas become white.
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, width, height);
-    context.drawImage(decoded.source, sx, sy, sw, sh, 0, 0, width, height);
+    context.drawImage(decoded.source, 0, 0, decoded.width, decoded.height, 0, 0, width, height);
 
     const output = await toJpeg(canvas);
     if (!output || output.size > limits.preparedPhotoBytes) {

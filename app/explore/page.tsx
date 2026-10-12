@@ -28,7 +28,7 @@ const services: Service[] = [
   },
   {
     name: "FIX My Style",
-    text: "Add pieces you already own and explore new ways to combine them.",
+    text: "Upload a photo of your outfit and see better ways to wear what you already own.",
     icon: "fix",
     href: fixMyStyleHref,
     status: "available",

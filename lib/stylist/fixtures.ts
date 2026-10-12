@@ -2,15 +2,18 @@
 import type { StylistInput, StylistOutput } from "./schema";
 
 export const validInput: StylistInput = {
-  occasion: "work",
+  occasions: ["work"],
   styles: ["minimal", "classic"],
   colours: ["neutrals"],
+  fit: null,
+  considerations: [],
   budgetTier: "mid",
   currency: "INR",
   notes: "I run warm, so lighter fabrics please.",
 };
 
 export const validOutput: StylistOutput = {
+  styleDirection: "Calm, polished and easy to wear, with quiet neutrals.",
   outfits: [
     {
       name: "Quiet Tailoring",

@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/container";
-import { FixMyStyleApp } from "@/components/fix-my-style/fix-my-style-app";
+import { OutfitStylist } from "@/components/fix-my-style/outfit-stylist";
 
 export const metadata: Metadata = {
   title: "FIX My Style",
   description:
-    "Make more of the clothes you already own. Build a digital wardrobe, create outfits from it, and find the finishing touches.",
+    "Upload a photo of your outfit and get better ways to wear the clothes you already own.",
 };
 
-// The page shell is static; the wardrobe lives in the visitor's browser (see
-// lib/fix-my-style/local-repository.ts), so the app itself is a client component.
 export default function FixMyStylePage() {
   return (
-    <Container className="py-8 md:py-14">
-      <FixMyStyleApp />
+    <Container className="py-6 md:py-14">
+      <OutfitStylist />
     </Container>
   );
 }

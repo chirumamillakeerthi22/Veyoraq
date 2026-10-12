@@ -6,7 +6,9 @@ import { createSavedStore } from "./store";
 const outfit = validOutput.outfits[0];
 const other = { ...outfit, name: "Another Look" };
 const answers = {
-  occasion: "work",
+  occasions: ["work"],
+  fit: null,
+  considerations: [],
   styles: ["minimal"],
   colours: [],
   budgetTier: "mid",

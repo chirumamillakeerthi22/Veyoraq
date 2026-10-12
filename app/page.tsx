@@ -316,7 +316,7 @@ export default function Home() {
             <p className="mt-6 max-w-md text-lg leading-8 text-stone">
               Your wardrobe has more possibilities than you think. Explore
               fresh combinations, thoughtful layering, and new ways to style
-              your favourite pieces. Your wardrobe stays on your own device.
+              your favourite pieces. Upload a photo of your outfit to begin.
             </p>
             <ButtonLink href={fixMyStyleHref} className="mt-8 w-full sm:w-auto">
               Open FIX My Style

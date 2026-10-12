@@ -22,6 +22,7 @@ export type NavLink = {
 export const stylistHref = "/stylist";
 export const fixMyStyleHref = "/fix-my-style";
 export const hairStudioHref = "/hair-studio";
+export const colourAnalysisHref = "/color-analysis";
 export const accountHref = "/account";
 
 // The directory of styling services, and product discovery.
@@ -46,7 +47,7 @@ export const navLinks: NavLink[] = [
     label: "Explore",
     href: exploreHref,
     icon: "discover",
-    activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref],
+    activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref],
   },
   { label: "Shop", href: shopHref, icon: "shop" },
 ];
@@ -55,7 +56,7 @@ export const navLinks: NavLink[] = [
 // from Explore, so the bar keeps to four destinations.
 export const bottomNavLinks: NavLink[] = [
   { label: "Home", href: "/", icon: "home" },
-  { label: "Explore", href: exploreHref, icon: "discover", activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref] },
+  { label: "Explore", href: exploreHref, icon: "discover", activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref] },
   collectionLinks[0],
   collectionLinks[1],
 ];

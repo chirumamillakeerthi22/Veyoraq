@@ -457,6 +457,18 @@ Verified (2026-10-12), production build, real browser: quiz refresh, Back/Forwar
 
 Not verified: real hairstyle images; whether the four generated faces match the person; a real phone camera and browsers' collapsing toolbars; removing a real saved look; Safari and Firefox.
 
+### Colour Analysis (`/color-analysis`, branch `color-analysis`, uncommitted)
+
+Introduction, photo guidance (daylight, background, camera, natural colour, Do and Avoid, tip, estimate disclaimer), photo step (camera capture or upload, preview, Retake, Replace, Remove, validation, local brightness and sharpness warnings, a face check where the browser supports it, and a disclosure of when the photo is sent), a six-question visual quiz with review and Edit, the AI estimate, and a results page with the likely season (or "colours to explore" when the evidence is weak), undertone, depth and contrast with uncertainty, a confidence explanation, swatches with names, HEX and usage (copyable), neutrals, accents, colours to approach carefully, combinations, styling advice, and Shop My Colors.
+- `POST /api/color-analysis/analyze`: the text and vision model (`gemini-3.5-flash-lite`, image input and JSON output verified live) returns a schema-validated estimate. Every HEX must be a real six-digit value, text with prices or links is rejected, and `uncertain` is a valid season. The prompt forbids inferring ethnicity or making medical claims. Limits: 5 analyses per 10 minutes and 20 per day per visitor (in memory, best effort). The photo is not stored or logged. No image generation is involved and there is no new paid service.
+- Persistence: answers, step and the finished result (never the photo) survive a refresh in versioned, expiring browser storage; Start Over and Retake clear it. After a reload the page asks for the photo again.
+- Save My Results keeps the palette and report on this device only (IndexedDB), listed on the introduction with Open and Delete. Account storage is PROPOSED in `supabase/proposed/colour_reports.sql` (one table with RLS, no storage bucket): not applied, not tested. The existing Saved Styles table cannot hold these reports, so they are kept separate from it and from the Wishlist.
+- Shop My Colors: VEYORAQ has no product catalogue, so it says so and shows outfit ideas built from the palette, labelled "Outfit idea, not a product". Matching and filtering logic (`lib/shop/match.ts`: colour, category, occasion, budget, retailer, buyable records only) is built and unit-tested for when a catalogue exists. There is no custom budget because no catalogue supports it.
+
+Verified (2026-10-12), production build, real browser and real Gemini: introduction, guidance, photo validation and warnings, all six questions with limits and required steps, reload mid-quiz (answers restored, photo requested again), the real endpoint with a licensed stock photo (valid, differently coloured results for different answers, honest hedging), a drawn illustration (declined honestly), a no-face photo (declined), results rendering with drawn swatches, Save, revisit, Retake, and a server with no AI key (quiz usable, analysis disabled with a reason). No horizontal overflow at 375, 768, 1024 and 1440 px.
+
+Not verified: results for several genuinely different faces (only one licensed face photo was available, so "different inputs give different results" was shown only through different answers); a real phone camera; account saving; real products.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

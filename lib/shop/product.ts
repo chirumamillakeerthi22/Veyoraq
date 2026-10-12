@@ -20,6 +20,12 @@ export type Product = {
   price: { amount: number; currency: "INR" | "USD" | "GBP" | "EUR" } | null;
   // When the price and availability were last checked (ISO date).
   checkedAt: string | null;
+  // Optional attributes used to match and filter against a colour palette.
+  colourHex?: string | null;
+  colourName?: string | null;
+  category?: string | null;
+  occasions?: string[];
+  budgetTier?: "budget" | "mid" | "premium" | null;
 };
 
 export function isShoppable(product: Product): boolean {

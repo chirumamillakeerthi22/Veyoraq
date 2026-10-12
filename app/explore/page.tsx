@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
 import { NavIconGlyph } from "@/components/nav-icon";
-import { fixMyStyleHref, hairStudioHref, stylistHref, type NavIcon } from "@/lib/navigation";
+import {
+  colourAnalysisHref,
+  fixMyStyleHref,
+  hairStudioHref,
+  stylistHref,
+  type NavIcon,
+} from "@/lib/navigation";
 
 export const metadata: Metadata = {
   title: "Explore",
@@ -49,9 +55,10 @@ const services: Service[] = [
   },
   {
     name: "Colour Analysis",
-    text: "Personal colour palettes built around the shades you love and feel good in.",
+    text: "Estimate your likely colour season and get a personal palette from a photo and a short quiz.",
     icon: "discover",
-    status: "soon",
+    href: colourAnalysisHref,
+    status: "available",
   },
   {
     name: "Fit guidance",

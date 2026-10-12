@@ -116,3 +116,49 @@ export const quizOptionSets = {
   fit: fitValues,
   considerations: considerationValues,
 };
+
+/* ---------- Draft (kept in the browser so a refresh does not lose progress) ---------- */
+
+export type QuizDraft = { answers: QuizAnswers; index: number };
+
+export const emptyDraft: QuizDraft = { answers: emptyAnswers, index: 0 };
+
+const only = <T extends string>(value: unknown, allowed: readonly T[]): T[] | null => {
+  if (!Array.isArray(value)) return null;
+  const clean = value.filter((entry): entry is T => allowed.includes(entry as T));
+  return clean.length === value.length ? clean : null;
+};
+
+// Returns a clean draft, or null when the stored data is not usable.
+export function validateDraft(data: unknown): QuizDraft | null {
+  if (!data || typeof data !== "object") return null;
+  const raw = data as { answers?: Record<string, unknown>; index?: unknown };
+  const a = raw.answers;
+  if (!a || typeof a !== "object") return null;
+
+  const styles = only(a.styles, styleValues);
+  const colours = only(a.colours, colourValues);
+  const occasions = only(a.occasions, occasionValues);
+  const considerations = only(a.considerations, considerationValues);
+  if (!styles || !colours || !occasions || !considerations) return null;
+  if (styles.length > limits.styles || colours.length > limits.colours) return null;
+  if (occasions.length > limits.occasions || considerations.length > limits.considerations) return null;
+
+  const fit = a.fit === null ? null : (fitValues as readonly unknown[]).includes(a.fit) ? (a.fit as QuizAnswers["fit"]) : undefined;
+  const budgetId =
+    a.budgetId === null
+      ? null
+      : budgetOptions.find((option) => option.id === a.budgetId)?.id;
+  if (fit === undefined || budgetId === undefined) return null;
+  if (typeof a.notes !== "string" || a.notes.length > limits.notes) return null;
+
+  const index = raw.index;
+  if (typeof index !== "number" || !Number.isInteger(index) || index < 0 || index > steps.length) {
+    return null;
+  }
+
+  return {
+    answers: { styles, colours, occasions, fit, budgetId, considerations, notes: a.notes },
+    index,
+  };
+}

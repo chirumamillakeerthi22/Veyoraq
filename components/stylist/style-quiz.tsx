@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { QuizActions } from "@/components/quiz-actions";
 import { OptionCard } from "@/components/stylist/option-card";
 import { OutfitResults } from "@/components/stylist/outfit-results";
 import { ShopYourStyle, type StylingGuidance } from "@/components/shop/shop-your-style";
@@ -16,17 +17,19 @@ import {
   styleLabels,
 } from "@/lib/stylist/options";
 import {
-  emptyAnswers,
+  emptyDraft,
   firstMissingStep,
   isAnswered,
   stepProblem,
   steps,
   toggleLimited,
   toStylistInput,
+  validateDraft,
   type QuizAnswers,
   type StepId,
 } from "@/lib/stylist/quiz";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
+import { createDraftStore } from "@/lib/persist/draft";
 import { toSavedAnswers } from "@/lib/saved/saved-outfits";
 import type { Outfit } from "@/lib/stylist/schema";
 
@@ -39,6 +42,14 @@ type View =
 const REQUEST_TIMEOUT_MS = 60_000;
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 const REVIEW = steps.length; // the step index after the last question
+
+// The person's answers and place in the quiz survive a refresh. Photos are not involved.
+const quizDraft = createDraftStore({
+  key: "veyoraq:draft:style-quiz",
+  version: 1,
+  initial: emptyDraft,
+  validate: validateDraft,
+});
 
 const primaryButton =
   "inline-flex min-h-12 items-center justify-center bg-espresso px-6 text-[0.8125rem] font-medium uppercase tracking-[0.14em] text-ivory transition-colors duration-200 hover:bg-stone disabled:cursor-not-allowed disabled:opacity-50";
@@ -136,8 +147,28 @@ export function StyleQuiz() {
   const ai = useAiStatus();
   const resultsUnavailable = ai.state === "ready" && !ai.text;
   const imageGenerationConfigured = ai.state === "ready" && ai.images;
-  const [answers, setAnswers] = useState<QuizAnswers>(emptyAnswers);
-  const [index, setIndex] = useState(0);
+  const draft = useSyncExternalStore(
+    quizDraft.subscribe,
+    quizDraft.getSnapshot,
+    quizDraft.getServerSnapshot,
+  );
+  const { answers, index } = draft;
+  const setAnswers = (next: QuizAnswers | ((current: QuizAnswers) => QuizAnswers)) =>
+    quizDraft.set((current) => ({
+      ...current,
+      answers: typeof next === "function" ? next(current.answers) : next,
+    }));
+  const setIndex = (next: number | ((current: number) => number)) =>
+    quizDraft.set((current) => ({
+      ...current,
+      index: typeof next === "function" ? next(current.index) : next,
+    }));
+  const restored = useSyncExternalStore(
+    () => () => {},
+    () => quizDraft.wasRestored(),
+    () => false,
+  );
+  const [dismissedRestore, setDismissedRestore] = useState(false);
   const [view, setView] = useState<View>({ kind: "quiz" });
   const [problem, setProblem] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -308,6 +339,18 @@ export function StyleQuiz() {
           questions.
         </p>
       )}
+      {restored && !dismissedRestore && (index > 0 || answers.styles.length > 0) && (
+        <p role="status" className="mb-6 flex flex-wrap items-center justify-between gap-2 border border-sand bg-soft-white p-4 text-sm leading-6">
+          <span>Welcome back. We kept your answers so you can carry on.</span>
+          <button
+            type="button"
+            onClick={() => setDismissedRestore(true)}
+            className="inline-flex min-h-11 items-center underline underline-offset-4"
+          >
+            OK
+          </button>
+        </p>
+      )}
       <div>
         <p className="flex items-center justify-between text-sm text-stone">
           <span>{atReview ? "Review your answers" : `Question ${index + 1} of ${steps.length}`}</span>
@@ -323,6 +366,19 @@ export function StyleQuiz() {
         >
           <div className="h-full bg-espresso transition-[width] duration-300" style={{ width: `${atReview ? 100 : progress}%` }} />
         </div>
+        {(index > 0 || answers.styles.length > 0 || answers.occasions.length > 0 || answers.budgetId !== null) && (
+          <button
+            type="button"
+            onClick={() => {
+              quizDraft.clear();
+              setProblem("");
+              setView({ kind: "quiz" });
+            }}
+            className="mt-1 inline-flex min-h-11 items-center text-sm text-stone underline underline-offset-4"
+          >
+            Start over
+          </button>
+        )}
       </div>
 
       <div key={index} className="quiz-step mt-6">
@@ -534,8 +590,7 @@ export function StyleQuiz() {
       )}
 
       {/* Large controls near the thumb. On phones the bar sits just above the bottom navigation. */}
-      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] -mx-5 mt-8 border-t border-sand bg-ivory px-5 py-3 sm:-mx-8 sm:px-8 md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
-        <div className="flex items-center gap-3">
+      <QuizActions>
           <button
             type="button"
             disabled={index === 0}
@@ -563,8 +618,7 @@ export function StyleQuiz() {
               )}
             </>
           )}
-        </div>
-      </div>
+      </QuizActions>
     </div>
   );
 }

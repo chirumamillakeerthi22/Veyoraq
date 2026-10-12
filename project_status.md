@@ -438,6 +438,25 @@ Verified (2026-10-12), production build, real browser: with no key (port 3102) t
 
 Not verified: real image generation (no quota); the Vercel preview itself (login-protected); a real phone camera.
 
+### Hair Studio, bottom-bar fix, Saved Styles grid, quiz persistence (branch `hair-studio`, uncommitted)
+
+**Hair Studio** (`/hair-studio`, linked from Explore and the homepage): photo (camera or upload, preview, Replace, Remove, validation, guidance; nothing is sent until Generate) then an eight-question quiz (hair type, thickness, change wanted, occasions, face framing, highlight, volume, length/styling/extras) with progress, Back, Continue, Skip, review and Edit, then four looks.
+- `POST /api/hair-studio/generate` (streamed): the text and vision model plans exactly four ideas that must differ in at least two attributes pairwise (checked server-side), then an image model, if configured, renders each on the person's own photo with a prompt that changes only the hair. Each picture arrives on its own, so a failed one never hides the others; a single look can be re-rendered.
+- Images are OFF unless `GEMINI_IMAGE_MODEL` is set, and every image model on the current key returns a quota error on the free tier, so NO real hairstyle image has been generated or seen. When off, the page shows the four written ideas with an honest banner and no pictures.
+- Cost to document before enabling: one full run asks the image model for FOUR pictures, plus one per Regenerate. Check the per-image price on Google's pricing page (not verified here). Server limits: 3 runs per 10 minutes and 12 per day per visitor (in memory, best effort), 8 and 30 for single re-renders.
+- Identity preservation is requested in the prompt but cannot be guaranteed or was never observed; previews are labelled as AI visualisations.
+- Save Look keeps a picture on this device only (the Supabase Saved Styles table cannot hold photos; account storage still needs the approval described in `supabase/proposed/fix_my_style_looks.sql`).
+
+**Mobile bottom bar.** The real navigation bar was measured at every scroll position on phone-sized emulation and stays pinned (0 px from the bottom), with no transform, filter, contain or overflow ancestor in its chain. What was reproducibly moving up and off screen was the quiz Back/Continue bar, which was `sticky` inside a container that ends before the footer (its top went from 538 px to -244 px as you scrolled). It is now `fixed` above the bottom bar on phones, with room reserved at the end of the page. Also hardened: `html` no longer pinned to one viewport height (body uses `min-h-dvh`), and the bar is its own GPU layer. Whether a real iOS or Android browser's collapsing toolbar behaves differently could not be tested here.
+
+**Saved Styles** uses a compact two-column card on phones (one column only below 341 px, three on tablet, four on desktop): the illustrated board, name and Remove, with details in a sheet. Layout verified with a temporary fixture page (removed); removing a real saved look was not exercised because no signed-in session was available.
+
+**Refresh persistence.** Discover My Style and Hair Studio keep answers and the current step in versioned, expiring browser storage (`lib/persist/draft.ts`); FIX My Style keeps its stage and written advice. Photos are never stored in browser text storage, so the page says the photo must be added again. Start Over clears the draft; completing a quiz leaves the answers so "Adjust my answers" still works. Invalid or old data is ignored.
+
+Verified (2026-10-12), production build, real browser: quiz refresh, Back/Forward/edit, Start Over, completion with real generation; FIX My Style refresh at the photo and result stages and Start Over; Hair Studio upload validation, all eight questions, exclusive "no preference", review, real four-idea planning, the real quota failure with per-look Regenerate and details sheet, and answers restored after a reload with a photo prompt; bottom-bar measurements; no horizontal overflow at 320, 375, 768, 1024 and 1440 px.
+
+Not verified: real hairstyle images; whether the four generated faces match the person; a real phone camera and browsers' collapsing toolbars; removing a real saved look; Safari and Firefox.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

@@ -5,11 +5,14 @@ import type { ItemCategory } from "./schema";
   Saved looks, kept in this browser's IndexedDB. Nothing leaves the device. Keeping
   looks in a Supabase account would need a table and a private storage bucket, which
   are proposed in supabase/proposed/ and have not been approved or applied.
+
+  The store is generic so FIX My Style and Hair Studio each keep their own kind of
+  look in their own database.
 */
 
-export type SavedLook = {
-  id: string;
-  savedAt: number;
+export type Saveable = { id: string; savedAt: number };
+
+export type SavedLook = Saveable & {
   original: Blob;
   // The generated picture, when image generation produced one.
   styled: Blob | null;
@@ -19,26 +22,27 @@ export type SavedLook = {
   additions: { name: string; why: string; tip: string }[];
 };
 
-export interface LooksRepository {
-  loadAll(): Promise<SavedLook[]>;
-  put(look: SavedLook): Promise<void>;
+export interface LooksRepository<T extends Saveable = SavedLook> {
+  loadAll(): Promise<T[]>;
+  put(look: T): Promise<void>;
   remove(id: string): Promise<void>;
 }
 
-export type LooksState = {
+export type LooksState<T extends Saveable = SavedLook> = {
   status: "idle" | "loading" | "ready" | "unavailable" | "error";
-  looks: SavedLook[];
+  looks: T[];
 };
 
-export const IDLE_LOOKS: LooksState = { status: "idle", looks: [] };
+export const IDLE_LOOKS: LooksState<never> = { status: "idle", looks: [] };
 
-const newestFirst = (a: SavedLook, b: SavedLook) => b.savedAt - a.savedAt;
-
-export function createLooksStore(getRepository: () => LooksRepository | null) {
-  const store = createExternalStore<LooksState>(IDLE_LOOKS);
+export function createLooksStore<T extends Saveable = SavedLook>(
+  getRepository: () => LooksRepository<T> | null,
+) {
+  const newestFirst = (a: T, b: T) => b.savedAt - a.savedAt;
+  const store = createExternalStore<LooksState<T>>(IDLE_LOOKS);
   let loading: Promise<void> | null = null;
 
-  const repo = (): LooksRepository | null => {
+  const repo = (): LooksRepository<T> | null => {
     try {
       return getRepository();
     } catch {
@@ -72,7 +76,7 @@ export function createLooksStore(getRepository: () => LooksRepository | null) {
 
     // Saving is idempotent: the same id replaces the same look, so a retry cannot
     // create a duplicate. Returns false when it could not be stored.
-    async save(look: SavedLook): Promise<boolean> {
+    async save(look: T): Promise<boolean> {
       const repository = repo();
       if (!repository) return false;
       try {
@@ -101,15 +105,14 @@ export function createLooksStore(getRepository: () => LooksRepository | null) {
   };
 }
 
-export type LooksStore = ReturnType<typeof createLooksStore>;
+export type LooksStore<T extends Saveable = SavedLook> = ReturnType<typeof createLooksStore<T>>;
 
-const DB_NAME = "veyoraq-looks";
 const STORE = "looks";
 
-function open(): Promise<IDBDatabase> {
+function open(dbName: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") return reject(new Error("IndexedDB is not available"));
-    const request = indexedDB.open(DB_NAME, 1);
+    const request = indexedDB.open(dbName, 1);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE)) {
         request.result.createObjectStore(STORE, { keyPath: "id" });
@@ -121,13 +124,14 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-async function run<T>(
+async function run<R>(
+  dbName: string,
   mode: IDBTransactionMode,
-  action: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
-  const db = await open();
+  action: (store: IDBObjectStore) => IDBRequest<R>,
+): Promise<R> {
+  const db = await open(dbName);
   try {
-    return await new Promise<T>((resolve, reject) => {
+    return await new Promise<R>((resolve, reject) => {
       const transaction = db.transaction(STORE, mode);
       const request = action(transaction.objectStore(STORE));
       transaction.oncomplete = () => resolve(request.result);
@@ -139,11 +143,13 @@ async function run<T>(
   }
 }
 
-export function createLocalLooksRepository(): LooksRepository | null {
+export function createLocalLooksRepository<T extends Saveable = SavedLook>(
+  dbName = "veyoraq-looks",
+): LooksRepository<T> | null {
   if (typeof indexedDB === "undefined") return null;
   return {
-    loadAll: () => run<SavedLook[]>("readonly", (store) => store.getAll()),
-    put: async (look) => void (await run("readwrite", (store) => store.put(look))),
-    remove: async (id) => void (await run("readwrite", (store) => store.delete(id))),
+    loadAll: () => run<T[]>(dbName, "readonly", (store) => store.getAll()),
+    put: async (look) => void (await run(dbName, "readwrite", (store) => store.put(look))),
+    remove: async (id) => void (await run(dbName, "readwrite", (store) => store.delete(id))),
   };
 }

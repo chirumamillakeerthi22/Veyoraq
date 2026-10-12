@@ -1,8 +1,7 @@
 "use client";
 
 import { ButtonLink } from "@/components/button-link";
-import { DeleteSavedButton } from "@/components/saved/delete-saved-button";
-import { OutfitCard } from "@/components/stylist/outfit-card";
+import { SavedCard } from "@/components/saved/saved-card";
 import { savedStore, useSavedOutfits } from "@/lib/saved/use-saved";
 
 function Notice({ children }: { children: React.ReactNode }) {
@@ -75,12 +74,11 @@ export function SavedList() {
           {state.message}
         </p>
       )}
-      <ol className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      {/* Two columns on phones (one only on exceptionally narrow screens), more on larger. */}
+      <ol className="grid grid-cols-2 gap-x-3 gap-y-8 max-[340px]:grid-cols-1 md:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
         {state.items.map((item) => (
           <li key={item.id}>
-            <OutfitCard outfit={item.outfit}>
-              <DeleteSavedButton id={item.id} itemKey={item.key} />
-            </OutfitCard>
+            <SavedCard item={item} />
           </li>
         ))}
       </ol>

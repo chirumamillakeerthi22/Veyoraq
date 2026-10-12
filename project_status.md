@@ -421,6 +421,23 @@ Verified (2026-10-12), production build, real browser, real Gemini text and visi
 
 Not verified: real image generation; a real phone camera (the file input was driven by script); safe-area and keyboard behaviour on a device; Safari and Firefox; screen reader and keyboard walk-through by hand; the Supabase SQL (never run).
 
+### Fix round: quiz "not available" and FIX My Style images (branch `mobile-first-ux`, uncommitted)
+
+**Cause of the quiz "not available" state.** `app/stylist/page.tsx` replaced the whole quiz with a "coming soon" page whenever `GEMINI_API_KEY` was missing, and the page is a static build, so the decision was frozen at build time. Production has the key and serves the quiz. Branch previews do not: the key was moved to the Production environment only, so a preview build bakes in the unavailable page. (The Vercel preview is behind login and could not be opened; this is inferred from the code and the environment history, not observed there.)
+
+**Fix.** The quiz always opens. A new `GET /api/stylist/status` (read at request time, returns only two booleans) tells the page what is available; the quiz shows a notice and explains it if results cannot be made. The same endpoint stops "images configured" from being frozen at build time.
+
+**Cause of no generated image.** Two separate facts, both verified against the live API with this key:
+1. The configured model (`gemini-3.5-flash-lite`) reads images but cannot create them.
+2. Every image model the key lists (8 of 8, including `gemini-2.5-flash-image`) returns `429 RESOURCE_EXHAUSTED` immediately. Image generation is not part of the free tier. On top of that, `GEMINI_IMAGE_MODEL` is intentionally unset, so the site correctly reports "not switched on".
+Real image generation therefore does NOT work yet and cannot until billing is enabled; there is no free route. When it fails, the page says so and offers Retry where retrying can help.
+
+**Waiting animation.** `StylingProgress` (three captions plus a still-line for reduced motion) is shown only while a request is running, is labelled "Nothing has been generated yet", and disappears when the request ends. It is never shown as a result, and nothing is simulated.
+
+Verified (2026-10-12), production build, real browser: with no key (port 3102) the quiz opens, shows the notice, completes, and explains that looks cannot be created, answers kept; FIX My Style accepts a photo and disables Style This Outfit with a reason; with a key (port 3100) the animation shows only during the request and the written advice appears; with an image model chosen (port 3101) the real quota error is shown with a working Retry, and quiz outfits show "Create image" which reports the same honestly; the request sent by the quiz contains the chosen (and edited) answers and the outfits reflect them. No horizontal overflow at 375, 768, 1024 and 1440 px on either page.
+
+Not verified: real image generation (no quota); the Vercel preview itself (login-protected); a real phone camera.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

@@ -39,6 +39,8 @@ export function isImageGenerationConfigured(): boolean {
   return getImageModel() !== undefined && getGeminiApiKey() !== undefined;
 }
 
+const FAILED_MESSAGE = "We couldn't generate your styled look this time. Please try again.";
+
 const fail = (code: ImageFailureCode, message: string): ImageResult => ({ ok: false, code, message });
 
 export async function generateImage(input: {
@@ -51,7 +53,7 @@ export async function generateImage(input: {
   if (!model || !apiKey) {
     return fail(
       "not_configured",
-      "AI image generation isn't switched on yet. The styling advice below still applies.",
+      "AI image generation isn't switched on yet. The written styling ideas still apply.",
     );
   }
 
@@ -78,7 +80,7 @@ export async function generateImage(input: {
       return fail("timeout", "Creating the image took too long. Please try again.");
     }
     console.error("[image] request failed:", error instanceof Error ? error.name : "unknown");
-    return fail("upstream_error", "We couldn't create an image just now. Please try again.");
+    return fail("upstream_error", FAILED_MESSAGE);
   }
 
   if (!response.ok) {
@@ -95,17 +97,17 @@ export async function generateImage(input: {
       // are not part of the free tier, so say that plainly instead of "try again".
       return fail(
         "quota",
-        "AI image generation isn't available on the current plan. The styling advice below still applies.",
+        "AI image generation isn't available on the current plan. The written styling ideas still apply.",
       );
     }
-    return fail("upstream_error", "We couldn't create an image just now. Please try again.");
+    return fail("upstream_error", FAILED_MESSAGE);
   }
 
   let body: unknown;
   try {
     body = await response.json();
   } catch {
-    return fail("upstream_error", "We couldn't create an image just now. Please try again.");
+    return fail("upstream_error", FAILED_MESSAGE);
   }
 
   const candidate = (
@@ -129,7 +131,7 @@ export async function generateImage(input: {
     if (first?.finishReason && first.finishReason !== "STOP") {
       return fail("refused", "We couldn't create an image for that photo.");
     }
-    return fail("no_image", "No image came back this time. Please try again.");
+    return fail("no_image", FAILED_MESSAGE);
   }
   return { ok: true, mimeType: image.mimeType, data: image.data };
 }

@@ -26,6 +26,7 @@ import {
   type QuizAnswers,
   type StepId,
 } from "@/lib/stylist/quiz";
+import { useAiStatus } from "@/lib/ai/use-ai-status";
 import { toSavedAnswers } from "@/lib/saved/saved-outfits";
 import type { Outfit } from "@/lib/stylist/schema";
 
@@ -128,7 +129,13 @@ const stepTitles: Record<StepId, string> = {
   extras: "Anything else",
 };
 
-export function StyleQuiz({ imageGenerationConfigured }: { imageGenerationConfigured: boolean }) {
+const RESULTS_UNAVAILABLE =
+  "Personalised looks can't be created on this site right now, because the AI styling service isn't set up here. Your answers are safe: you can keep going through the quiz and change them.";
+
+export function StyleQuiz() {
+  const ai = useAiStatus();
+  const resultsUnavailable = ai.state === "ready" && !ai.text;
+  const imageGenerationConfigured = ai.state === "ready" && ai.images;
   const [answers, setAnswers] = useState<QuizAnswers>(emptyAnswers);
   const [index, setIndex] = useState(0);
   const [view, setView] = useState<View>({ kind: "quiz" });
@@ -178,6 +185,10 @@ export function StyleQuiz({ imageGenerationConfigured }: { imageGenerationConfig
     }
     const input = toStylistInput(answers);
     if (!input) return;
+
+    if (resultsUnavailable) {
+      return setView({ kind: "error", message: RESULTS_UNAVAILABLE });
+    }
 
     setView({ kind: "loading" });
     const controller = new AbortController();
@@ -290,6 +301,13 @@ export function StyleQuiz({ imageGenerationConfigured }: { imageGenerationConfig
 
   return (
     <div className="mx-auto max-w-3xl">
+      {resultsUnavailable && (
+        <p role="status" className="mb-6 border border-espresso/40 bg-soft-white p-4 text-sm leading-6">
+          The quiz works, but personalised looks can&rsquo;t be created on this site right now
+          because the AI styling service isn&rsquo;t set up here. You can still answer the
+          questions.
+        </p>
+      )}
       <div>
         <p className="flex items-center justify-between text-sm text-stone">
           <span>{atReview ? "Review your answers" : `Question ${index + 1} of ${steps.length}`}</span>

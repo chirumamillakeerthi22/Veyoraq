@@ -44,6 +44,32 @@ body {
   outline-color: var(--color-ivory);
 }
 
+/*
+  FIX My Style's waiting animation: three short captions that take turns. It only
+  exists while a request is running. Reduced motion swaps it for one still line
+  (see the motion-reduce classes in styled-result.tsx).
+*/
+@keyframes progress-step {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  6%,
+  28% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  34%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.progress-step {
+  opacity: 0;
+  animation: progress-step 6.6s ease-in-out infinite;
+}
+
 /* Quiz questions fade and rise in gently. Reduced motion shortens this to nothing. */
 @keyframes quiz-in {
   from {

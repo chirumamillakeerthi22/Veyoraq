@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { blobToBase64, prepareImage, validateFile } from "@/lib/fix-my-style/image";
+import { useAiStatus } from "@/lib/ai/use-ai-status";
 import { looksStore, useLooks } from "@/lib/fix-my-style/use-looks";
 import {
   outfitAnalysisSchema,
@@ -12,6 +13,7 @@ import {
 import {
   Advice,
   Comparison,
+  StylingProgress,
   photoUrl,
   primaryButton,
   releasePhoto,
@@ -41,6 +43,10 @@ function describeImage(image: StyledImage): ImageState | Promise<ImageState> {
 
 export function OutfitStylist() {
   const looks = useLooks();
+  const ai = useAiStatus();
+  // Known only after the site has been asked. "unknown" still lets the person try.
+  const stylingUnavailable = ai.state === "ready" && !ai.text;
+  const imagesOff = ai.state === "ready" && ai.text && !ai.images;
   const cameraInput = useRef<HTMLInputElement>(null);
   const libraryInput = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -213,6 +219,7 @@ export function OutfitStylist() {
   }
 
   const busy = run.phase === "analysing" || preparing;
+  const canStyle = !busy && !stylingUnavailable;
   const showing =
     openLook ?? (run.phase === "result" && photo ? { original: photo, analysis: run.analysis, image: run.image } : null);
 
@@ -333,17 +340,25 @@ export function OutfitStylist() {
             <div className="md:sticky md:top-24">
               <button
                 type="button"
-                disabled={busy}
+                disabled={!canStyle}
                 onClick={() => void styleOutfit()}
                 className={`${primaryButton} w-full text-base`}
               >
                 {run.phase === "analysing" ? "Styling…" : "Style This Outfit"}
               </button>
-              {run.phase === "analysing" && (
-                <p role="status" className="mt-3 text-sm leading-6 text-stone">
-                  Looking at your clothes and colours. This usually takes a few seconds.
+              {stylingUnavailable && (
+                <p role="alert" className="mt-3 border border-espresso p-3 text-sm leading-6">
+                  Outfit styling isn&rsquo;t available on this site right now, because the AI
+                  service isn&rsquo;t set up here. Your photo hasn&rsquo;t been sent anywhere.
                 </p>
               )}
+              {imagesOff && run.phase === "idle" && (
+                <p className="mt-3 text-sm leading-6 text-stone">
+                  You&rsquo;ll get written styling advice. AI picture generation isn&rsquo;t
+                  switched on for this site yet.
+                </p>
+              )}
+              {run.phase === "analysing" && <StylingProgress compact />}
               {run.phase === "error" && (
                 <div role="alert" className="mt-4 border border-espresso p-4">
                   <p className="font-display text-2xl leading-7">That didn&rsquo;t work.</p>
@@ -371,7 +386,11 @@ export function OutfitStylist() {
 
       {showing && (
         <section aria-label="Your styled look" className="mt-12 space-y-10 border-t border-sand pt-10" aria-live="polite">
-          <Comparison original={showing.original} image={showing.image} />
+          <Comparison
+            original={showing.original}
+            image={showing.image}
+            onRetry={() => void styleOutfit(showing.original)}
+          />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <button type="button" disabled={busy} onClick={() => void styleOutfit(showing.original)} className={primaryButton}>

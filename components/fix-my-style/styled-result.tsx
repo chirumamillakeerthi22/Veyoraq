@@ -31,6 +31,52 @@ export type ImageState =
   | { state: "ready"; blob: Blob }
   | { state: "unavailable"; kind: Exclude<StyledImage["status"], "generated">; message: string };
 
+const progressSteps = ["Understanding your outfit", "Exploring combinations", "Preparing your look"];
+
+/*
+  Shown only while a request is running. It is a waiting animation, not a result:
+  it is never shown after a request ends, and it says nothing was generated yet.
+*/
+export function StylingProgress({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex flex-col items-center justify-center gap-4 text-center ${compact ? "p-4" : "h-full p-6"}`}
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 64 64"
+        className="h-16 w-16 animate-pulse text-taupe motion-reduce:animate-none"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M32 14a5 5 0 1 0-5-5" />
+        <path d="M32 14v6l24 17a3 3 0 0 1-1.800 5.400H9.800A3 3 0 0 1 8 37z" />
+      </svg>
+
+      {/* Three captions take turns. Reduced motion shows one still line instead. */}
+      <div className="relative h-8 w-full motion-reduce:hidden">
+        {progressSteps.map((step, index) => (
+          <p
+            key={step}
+            className="progress-step absolute inset-0 font-display text-2xl leading-8"
+            style={{ animationDelay: `${index * 2.2}s` }}
+          >
+            {step}…
+          </p>
+        ))}
+      </div>
+      <p className="hidden font-display text-2xl leading-8 motion-reduce:block">Working on your look…</p>
+
+      <p className="text-sm text-stone">Nothing has been generated yet. This can take up to a minute.</p>
+    </div>
+  );
+}
+
 function Frame({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <figure>
@@ -41,7 +87,15 @@ function Frame({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // Original and styled look, stacked on phones and side by side from md up.
-export function Comparison({ original, image }: { original: Blob; image: ImageState }) {
+export function Comparison({
+  original,
+  image,
+  onRetry,
+}: {
+  original: Blob;
+  image: ImageState;
+  onRetry?: () => void;
+}) {
   return (
     <div className="grid gap-5 md:grid-cols-2 md:gap-6">
       <Frame label="Original Outfit">
@@ -58,13 +112,7 @@ export function Comparison({ original, image }: { original: Blob; image: ImageSt
             className="h-full w-full object-cover"
           />
         )}
-        {image.state === "pending" && (
-          <div role="status" className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-            <span className="h-8 w-8 animate-spin rounded-full border-2 border-espresso/20 border-t-espresso motion-reduce:animate-none" />
-            <p className="font-display text-2xl leading-7">Creating your styled look…</p>
-            <p className="text-sm text-stone">This can take up to a minute.</p>
-          </div>
-        )}
+        {image.state === "pending" && <StylingProgress />}
         {image.state === "unavailable" && (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <p className="font-display text-2xl leading-7">
@@ -77,6 +125,11 @@ export function Comparison({ original, image }: { original: Blob; image: ImageSt
                     : "Image styling isn’t on yet."}
             </p>
             <p className="text-sm leading-6 text-stone">{image.message}</p>
+            {onRetry && (image.kind === "failed" || image.kind === "unavailable") && (
+              <button type="button" onClick={onRetry} className={`${secondaryButton} mt-2`}>
+                Retry
+              </button>
+            )}
           </div>
         )}
       </Frame>

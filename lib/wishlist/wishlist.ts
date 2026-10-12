@@ -8,6 +8,8 @@
   invented: a field that is not known is simply not shown.
 */
 
+import { isAudience, type Audience } from "@/lib/audience";
+
 export const WISHLIST_TABLE = "wishlist_items";
 export const WISHLIST_LIMIT = 200;
 
@@ -20,6 +22,9 @@ export type WishlistItem = {
   retailer: string | null;
   productUrl: string | null;
   createdAt: string;
+  // The audience the product was classified for, or null when not recorded
+  // (older items, or the column has not been added yet). Never guessed.
+  audience: Audience | null;
 };
 
 // Only secure web addresses are ever used for images and product links.
@@ -68,6 +73,7 @@ export function parseWishlistRows(rows: unknown): WishlistItem[] {
       retailer: text(record.retailer, 80),
       productUrl: safeHttpsUrl(record.product_url),
       createdAt: typeof record.created_at === "string" ? record.created_at : "",
+      audience: isAudience(record.audience) ? record.audience : null,
     });
   }
   return items;

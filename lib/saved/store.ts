@@ -101,7 +101,7 @@ export function createSavedStore(getClient: () => Client) {
 
     const { data: rows, error } = await client
       .from(TABLE)
-      .select("id, name, outfit, created_at")
+      .select("id, name, outfit, answers, created_at")
       .order("created_at", { ascending: false })
       .limit(SAVED_LIMIT);
 

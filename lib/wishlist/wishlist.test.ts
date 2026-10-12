@@ -52,8 +52,16 @@ describe("parseWishlistRows", () => {
         retailer: "Example Store",
         productUrl: "https://shop.example/p/1",
         createdAt: "2026-10-12T10:00:00Z",
+        audience: null,
       },
     ]);
+  });
+
+  it("reads a valid audience and treats anything else as not recorded", () => {
+    expect(parseWishlistRows([row({ audience: "men" })])[0].audience).toBe("men");
+    expect(parseWishlistRows([row({ audience: "women" })])[0].audience).toBe("women");
+    expect(parseWishlistRows([row({ audience: "kids" })])[0].audience).toBeNull();
+    expect(parseWishlistRows([row()])[0].audience).toBeNull();
   });
 
   it("accepts a price that arrives as text, as Postgres numeric does", () => {

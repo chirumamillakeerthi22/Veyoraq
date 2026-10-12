@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
+import { ExploreAudienceNote } from "@/components/explore-audience-note";
 import { NavIconGlyph } from "@/components/nav-icon";
 import {
   colourAnalysisHref,
@@ -118,6 +119,7 @@ export default function ExplorePage() {
         <p className="mt-6 text-lg leading-8 text-stone">
           VEYORAQ is in development. Each service shows whether you can use it today.
         </p>
+        <ExploreAudienceNote />
       </div>
 
       <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">

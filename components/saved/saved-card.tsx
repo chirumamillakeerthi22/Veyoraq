@@ -5,6 +5,7 @@ import { DeleteSavedButton } from "@/components/saved/delete-saved-button";
 import { Sheet } from "@/components/sheet";
 import { OutfitBoard } from "@/components/stylist/outfit-board";
 import { OutfitCard } from "@/components/stylist/outfit-card";
+import { audienceLabels } from "@/lib/audience";
 import type { SavedOutfit } from "@/lib/saved/saved-outfits";
 
 /*
@@ -12,7 +13,7 @@ import type { SavedOutfit } from "@/lib/saved/saved-outfits";
   focus, then the name and the Remove action. Tapping the picture or the name opens
   the full outfit (pieces, why it works, tip) in a sheet.
 */
-export function SavedCard({ item }: { item: SavedOutfit }) {
+export function SavedCard({ item, showAudience = false }: { item: SavedOutfit; showAudience?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -29,6 +30,11 @@ export function SavedCard({ item }: { item: SavedOutfit }) {
         <span className="mt-2 block font-display text-lg leading-6 [overflow-wrap:anywhere] sm:text-xl">
           {item.outfit.name}
         </span>
+        {showAudience && item.audience && (
+          <span className="mt-0.5 block text-xs uppercase tracking-[0.14em] text-stone">
+            {audienceLabels[item.audience]}
+          </span>
+        )}
         <span className="sr-only">. Open details.</span>
       </button>
 

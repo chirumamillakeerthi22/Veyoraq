@@ -61,7 +61,9 @@ export function createWishlistStore(getClient: () => Client) {
 
     const { data: rows, error } = await client
       .from(WISHLIST_TABLE)
-      .select("id, name, image_url, price_amount, price_currency, retailer, product_url, created_at")
+      // "*" so the optional audience column is read when it exists and the page keeps
+      // working before that migration is applied.
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(WISHLIST_LIMIT);
 

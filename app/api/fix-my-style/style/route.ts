@@ -1,3 +1,4 @@
+import { audienceValues } from "@/lib/audience";
 import { errorResponse, isSameOrigin, styleLimiter } from "@/lib/fix-my-style/http";
 import { detectImageType } from "@/lib/fix-my-style/image-type";
 import { limits } from "@/lib/fix-my-style/limits";
@@ -11,7 +12,9 @@ export const maxDuration = 60;
 // Base64 text is about 4/3 of the bytes it carries, plus a little JSON.
 const MAX_BODY_CHARACTERS = Math.ceil((limits.preparedPhotoBytes * 4) / 3) + 1_000;
 
-const bodySchema = z.object({ image: z.string().min(1) }).strict();
+const bodySchema = z
+  .object({ image: z.string().min(1), audience: z.enum(audienceValues).optional() })
+  .strict();
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
 /*
@@ -69,7 +72,7 @@ export async function POST(request: Request) {
       const send = (event: StyleEvent) =>
         controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
       try {
-        const analysis = await analyzeOutfit(reference);
+        const analysis = await analyzeOutfit(reference, parsed.data.audience);
         if (!analysis.ok) {
           send({ type: "error", message: analysis.message });
           return;

@@ -1,3 +1,4 @@
+import type { Audience } from "@/lib/audience";
 import { isShoppable, type Product } from "./product";
 
 /*
@@ -12,6 +13,9 @@ export type ProductFilters = {
   occasion: string | null;
   budgetTier: "budget" | "mid" | "premium" | null;
   retailer: string | null;
+  // The selected audience. Products of the other audience (and unclassified
+  // products) are never returned. Null means "do not filter by audience".
+  audience: Audience | null;
 };
 
 export const noFilters: ProductFilters = {
@@ -20,6 +24,7 @@ export const noFilters: ProductFilters = {
   occasion: null,
   budgetTier: null,
   retailer: null,
+  audience: null,
 };
 
 function rgb(hex: string): [number, number, number] | null {
@@ -54,6 +59,7 @@ export function filterProducts(
     if (!isShoppable(product)) return false; // never show a record that cannot be bought
     if (!matchesPalette(product, paletteHexes)) return false;
     if (filters.colourHex && !(product.colourHex && colourDistance(product.colourHex, filters.colourHex) <= MATCH_DISTANCE)) return false;
+    if (filters.audience && product.audience !== filters.audience) return false;
     if (filters.category && product.category !== filters.category) return false;
     if (filters.occasion && !(product.occasions ?? []).includes(filters.occasion)) return false;
     if (filters.budgetTier && product.budgetTier !== filters.budgetTier) return false;

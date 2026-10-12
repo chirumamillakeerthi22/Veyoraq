@@ -481,6 +481,16 @@ Not verified: results for several genuinely different faces (only one licensed f
 - Wishlist table: the owner applied `supabase/migrations/20261012000000_wishlist_items.sql` and ran `supabase/tests/wishlist_security_test.sql`, which returned "ALL SECURITY TESTS PASSED (12 of 12)" (rolled back on purpose). The Wishlist page and heart still need to be wired to this table and checked signed in; that has not been done or verified.
 - Verified: tsc, eslint, vitest (468 pass), production build; in the browser, footer/selector presence per route, selector persistence across pages, the short photo screen at 375 px (both photo actions above the bottom nav, no horizontal overflow), and the Saved colour-analysis tab. Not verified: the bookmark with a real signed-in account, a saved report opened from Saved after a real analysis, and a real phone.
 
+### Women/Men audience (2026-10-13, branch `nav-save-footer`, uncommitted)
+
+- Audience is now exactly `women` | `men` (`lib/audience.ts`, one browser-stored source of truth, default Women; an old "boys"/"girls" value falls back to Women). Header dropdown beside Explore (desktop) and beside Shop (phones): `components/audience-menu.tsx`. The earlier four-option row was removed.
+- Homepage is unchanged by the choice and now has a "Styling for everyone" section with Women's and Men's entry points (two new Unsplash men's photos in `lib/photos.ts`).
+- Shop: `Product.audience` (women | men | null). `productsForAudience()` and `filterProducts({audience})` return only the selected audience and never unclassified records; with no catalogue the Shop and Color Analysis show an audience-specific empty state. No catalogue exists, so no real products were separated.
+- Stylist, Color Analysis, FIX My Style and Hair Studio send `audience` (validated server-side, optional) and their prompts tailor to it. Verified live only for Discover (Men request returned menswear pieces).
+- Saved Styles: the audience a look was made for is stored inside the existing `answers` JSON (no schema change). The default view shows the selected audience plus older untagged looks, with "Show all". Switching never edits or deletes anything.
+- Wishlist: `supabase/migrations/20261013000000_wishlist_item_audience.sql` (additive nullable column) is PROPOSED and NOT applied; test `supabase/tests/wishlist_audience_test.sql` is NOT run. The page reads `audience` when present and works without it.
+- Not verified: Colour Analysis, FIX My Style and Hair Studio outputs for Men with real photos; signed-in saved/wishlist views; real phone.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

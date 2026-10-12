@@ -52,7 +52,7 @@ describe("POST /api/fix-my-style/style", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/x-ndjson");
     expect((await events(response)).map((event) => event.type)).toEqual(["analysis", "image", "done"]);
-    expect(analyzeOutfit).toHaveBeenCalledWith({ mimeType: "image/jpeg", base64: JPEG });
+    expect(analyzeOutfit).toHaveBeenCalledWith({ mimeType: "image/jpeg", base64: JPEG }, undefined);
   });
 
   it("still returns the written advice when images are not available", async () => {

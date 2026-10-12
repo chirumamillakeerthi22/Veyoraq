@@ -1,3 +1,4 @@
+import type { Audience } from "@/lib/audience";
 import { callGeminiJson, type GeminiJsonResult } from "@/lib/ai/gemini-json";
 import { generateImage, type ImageResult } from "@/lib/ai/gemini-image";
 import { outfitAnalysisSchema, type OutfitAnalysis, type StyledImage } from "./schema";
@@ -19,16 +20,20 @@ Describe what is visible and how to style the SAME clothes better.
 - Never mention prices, brands, shops, links or availability.
 - Do not identify the person.`;
 
-export async function analyzeOutfit(image: {
-  mimeType: string;
-  base64: string;
-}): Promise<GeminiJsonResult<OutfitAnalysis>> {
+export async function analyzeOutfit(
+  image: { mimeType: string; base64: string },
+  audience?: Audience,
+): Promise<GeminiJsonResult<OutfitAnalysis>> {
   return callGeminiJson({
     label: "fix-style",
     system: instructions,
     parts: [
       { inlineData: { mimeType: image.mimeType, data: image.base64 } },
-      { text: "Look at this outfit and describe it and how to style it better." },
+      {
+        text: audience
+          ? `Look at this outfit and describe it and how to style it better. Write the suggestions for ${audience === "men" ? "menswear" : "womenswear"}.`
+          : "Look at this outfit and describe it and how to style it better.",
+      },
     ],
     schema: outfitAnalysisSchema,
     maxOutputTokens: 1_200,

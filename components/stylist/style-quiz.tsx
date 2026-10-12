@@ -29,7 +29,8 @@ import {
   type StepId,
 } from "@/lib/stylist/quiz";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
-import { audienceStore } from "@/lib/audience";
+import { audienceStore, type Audience } from "@/lib/audience";
+import { useAudience } from "@/lib/use-audience";
 import { createDraftStore } from "@/lib/persist/draft";
 import { toSavedAnswers } from "@/lib/saved/saved-outfits";
 import type { Outfit } from "@/lib/stylist/schema";
@@ -38,7 +39,9 @@ type View =
   | { kind: "quiz" }
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "results"; outfits: Outfit[]; styleDirection: string };
+  // audience is who these outfits were created for, kept with them so a saved look
+  // records it and so they are not shown after the audience is switched.
+  | { kind: "results"; outfits: Outfit[]; styleDirection: string; audience: Audience };
 
 const REQUEST_TIMEOUT_MS = 60_000;
 const GENERIC_ERROR = "Something went wrong. Please try again.";
@@ -170,7 +173,12 @@ export function StyleQuiz() {
     () => false,
   );
   const [dismissedRestore, setDismissedRestore] = useState(false);
-  const [view, setView] = useState<View>({ kind: "quiz" });
+  const [rawView, setView] = useState<View>({ kind: "quiz" });
+  const audience = useAudience();
+  // Results made for the other audience are not shown after the audience is switched
+  // (the answers are kept, so asking again is one tap).
+  const view: View =
+    rawView.kind === "results" && rawView.audience !== audience ? { kind: "quiz" } : rawView;
   const [problem, setProblem] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
@@ -246,7 +254,12 @@ export function StyleQuiz() {
       if (!Array.isArray(body?.outfits) || body.outfits.length === 0) {
         return setView({ kind: "error", message: GENERIC_ERROR });
       }
-      setView({ kind: "results", outfits: body.outfits, styleDirection: body.styleDirection ?? "" });
+      setView({
+        kind: "results",
+        outfits: body.outfits,
+        styleDirection: body.styleDirection ?? "",
+        audience: input.audience,
+      });
     } catch {
       setView({ kind: "error", message: "We couldn't reach the styling service. Check your connection and try again." });
     } finally {
@@ -306,7 +319,7 @@ export function StyleQuiz() {
 
         <OutfitResults
           outfits={view.outfits}
-          answers={input ? toSavedAnswers(input) : null}
+          answers={input ? toSavedAnswers({ ...input, audience: view.audience }) : null}
           imageGenerationConfigured={imageGenerationConfigured}
         />
 

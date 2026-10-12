@@ -9,6 +9,8 @@
   a half-filled record can never appear as a buyable product.
 */
 
+import type { Audience } from "@/lib/audience";
+
 export type Product = {
   id: string;
   name: string;
@@ -26,6 +28,10 @@ export type Product = {
   category?: string | null;
   occasions?: string[];
   budgetTier?: "budget" | "mid" | "premium" | null;
+  // Who the product is for, as classified by the catalogue. Null means "not
+  // classified": such a record is never shown in an audience's results, because the
+  // audience must come from the data and is never guessed from a name or an image.
+  audience: Audience | null;
 };
 
 export function isShoppable(product: Product): boolean {

@@ -5,6 +5,7 @@ import { analyseColours, colourLimiter } from "@/lib/color-analysis/generate";
 import { parseColourAnswers } from "@/lib/color-analysis/quiz";
 import { clientKey, describeWait } from "@/lib/stylist/rate-limit";
 import { z } from "zod";
+import { audienceValues } from "@/lib/audience";
 
 export const maxDuration = 60;
 
@@ -12,7 +13,14 @@ export const maxDuration = 60;
 const MAX_BODY_CHARACTERS = Math.ceil((limits.preparedPhotoBytes * 4) / 3) + 2_000;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
-const bodySchema = z.object({ image: z.string().min(1), answers: z.unknown() }).strict();
+const bodySchema = z
+  .object({
+    image: z.string().min(1),
+    answers: z.unknown(),
+    // Who the outfit ideas are for. Optional; validated against the known values.
+    audience: z.enum(audienceValues).optional(),
+  })
+  .strict();
 
 /*
   Estimates a colour profile from one photo and the quiz answers. The photo is used
@@ -61,7 +69,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await analyseColours({ mimeType, base64: parsed.data.image }, answers);
+  const result = await analyseColours(
+    { mimeType, base64: parsed.data.image },
+    answers,
+    parsed.data.audience,
+  );
   if (!result.ok) {
     if (result.code === "not_configured") return errorResponse("not_configured", result.message);
     // A photo that cannot be judged is a normal outcome, not a server fault.

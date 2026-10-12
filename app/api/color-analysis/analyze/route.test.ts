@@ -39,7 +39,14 @@ describe("POST /api/color-analysis/analyze", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ summary: "ok" });
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(analyseColours).toHaveBeenCalledWith({ mimeType: "image/jpeg", base64: JPEG }, answers);
+    expect(analyseColours).toHaveBeenCalledWith({ mimeType: "image/jpeg", base64: JPEG }, answers, undefined);
+  });
+
+  it("passes a valid audience through and rejects an unknown one", async () => {
+    analyseColours.mockResolvedValue({ ok: true, analysis: { summary: "ok" } });
+    expect((await post({ image: JPEG, answers, audience: "men" })).status).toBe(200);
+    expect(analyseColours).toHaveBeenCalledWith({ mimeType: "image/jpeg", base64: JPEG }, answers, "men");
+    expect((await post({ image: JPEG, answers, audience: "boys" })).status).toBe(400);
   });
 
   it("checks the file's own bytes and the answers before calling the AI", async () => {

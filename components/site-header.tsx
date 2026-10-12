@@ -14,7 +14,7 @@ export function SiteHeader() {
         <Link
           href="/"
           aria-label={`${brand.name} home`}
-          className="flex min-h-11 items-center font-display text-[1.375rem] font-medium tracking-[0.24em] md:text-2xl md:tracking-[0.28em] lg:text-[1.75rem]"
+          className="flex min-h-11 items-center font-display text-[1.375rem] font-medium tracking-[0.24em] max-[359px]:text-lg max-[359px]:tracking-[0.12em] md:text-2xl md:tracking-[0.28em] lg:text-[1.75rem]"
         >
           {brand.name}
         </Link>

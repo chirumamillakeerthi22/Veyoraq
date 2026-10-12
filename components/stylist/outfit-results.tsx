@@ -1,4 +1,5 @@
 import { OutfitImage } from "@/components/stylist/outfit-image";
+import { QuickSaveBookmark } from "@/components/saved/quick-save-bookmark";
 import { SaveOutfitButton } from "@/components/saved/save-outfit-button";
 import { OutfitCard } from "@/components/stylist/outfit-card";
 import type { SavedAnswers } from "@/lib/saved/saved-outfits";
@@ -21,7 +22,10 @@ export function OutfitResults({
     <ol className="grid gap-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
       {outfits.map((outfit, index) => (
         <li key={`${outfit.name}-${index}`}>
-          <OutfitCard outfit={outfit}>
+          <OutfitCard
+            outfit={outfit}
+            overlay={<QuickSaveBookmark outfit={outfit} answers={answers} />}
+          >
             <SaveOutfitButton outfit={outfit} answers={answers} />
             {imageGenerationConfigured && <OutfitImage outfit={outfit} />}
           </OutfitCard>

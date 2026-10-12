@@ -29,6 +29,7 @@ import {
   type StepId,
 } from "@/lib/stylist/quiz";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
+import { audienceStore } from "@/lib/audience";
 import { createDraftStore } from "@/lib/persist/draft";
 import { toSavedAnswers } from "@/lib/saved/saved-outfits";
 import type { Outfit } from "@/lib/stylist/schema";
@@ -214,8 +215,10 @@ export function StyleQuiz() {
       setIndex(steps.findIndex((step) => step.id === missing));
       return setProblem(stepProblem(missing, answers) ?? "");
     }
-    const input = toStylistInput(answers);
-    if (!input) return;
+    const base = toStylistInput(answers);
+    if (!base) return;
+    // The "Styling for" choice is read at the moment of asking, so it is always current.
+    const input = { ...base, audience: audienceStore.getSnapshot().audience };
 
     if (resultsUnavailable) {
       return setView({ kind: "error", message: RESULTS_UNAVAILABLE });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { audienceValues } from "@/lib/audience";
 import {
   budgetTierValues,
   colourValues,
@@ -39,6 +40,9 @@ export const stylistInputSchema = z
     budgetTier: z.enum(budgetTierValues),
     currency: z.enum(currencyValues),
     notes: z.string().trim().max(limits.notes),
+    // Who the outfits are for (the "Styling for" selector). Optional so older
+    // clients keep working; when absent the stylist makes no assumption.
+    audience: z.enum(audienceValues).optional(),
   })
   .strict();
 

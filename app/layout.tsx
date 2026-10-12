@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Geist } from "next/font/google";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { BottomNav } from "@/components/bottom-nav";
-import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { brand } from "@/lib/brand";
 import "./globals.css";
@@ -63,10 +62,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SiteHeader />
-        <main id="main" className="flex-1">
+        {/*
+          Footers are chosen per route (see each route's layout.tsx and the homepage),
+          so focused tools stay short and discovery pages keep the full footer. main
+          is a column so a footer follows the content and sits at the bottom of short
+          pages.
+        */}
+        <main id="main" className="flex flex-1 flex-col">
           {children}
         </main>
-        <SiteFooter />
         <BottomNav />
         <SignInPrompt />
       </body>

@@ -471,6 +471,16 @@ Account saving (added after the above, 2026-10-13): the owner applied `supabase/
 
 Not verified: results for several genuinely different faces (only one licensed face photo was available, so "different inputs give different results" was shown only through different answers); a real phone camera; a signed-in save from the live site; real products.
 
+### Navigation, quick save, saved colour analysis, footer (2026-10-13, branch `nav-save-footer`, not yet merged)
+
+- "Styling for" selector (`components/audience-selector.tsx`, `lib/audience.ts`): Women / Men / Boys / Girls in one row, remembered in browser storage (`veyoraq:audience`), default Women, shown on Home, Explore, Shop, Discover, FIX My Style, Hair Studio and Color Analysis. Only the Discover stylist uses it so far (optional `audience` field in the request and prompt). FIX My Style, Hair Studio and Color Analysis do not yet use it, and Shop has no products to filter.
+- Quick-save bookmark (`components/saved/quick-save-bookmark.tsx`) on Discover My Style outfit cards, using the existing saved-looks store. FIX My Style and Color Analysis combinations are not `Outfit` records (no pieces/palette in the saved format), so they have no bookmark; adding one would need a new saved type and table, which was not invented.
+- Saved page has an "Outfits" and a "Your Color Analysis" tab (`components/saved/saved-tabs.tsx`, `saved-colour-reports.tsx`); the results button reads "Save My Color Analysis". Opening a saved report shows the stored result without calling the AI.
+- Color Analysis guidance merged into the photo screen (3 tips, short privacy note); the separate guidance screen is gone.
+- Footers chosen per route through route `layout.tsx` files: full footer on Home, Explore and Shop; compact footer on Discover, FIX My Style, Hair Studio, Color Analysis, Saved, Wishlist, Account. About, Contact, Privacy and Terms pages still do not exist (shown as "Soon").
+- Wishlist table: the owner applied `supabase/migrations/20261012000000_wishlist_items.sql` and ran `supabase/tests/wishlist_security_test.sql`, which returned "ALL SECURITY TESTS PASSED (12 of 12)" (rolled back on purpose). The Wishlist page and heart still need to be wired to this table and checked signed in; that has not been done or verified.
+- Verified: tsc, eslint, vitest (468 pass), production build; in the browser, footer/selector presence per route, selector persistence across pages, the short photo screen at 375 px (both photo actions above the bottom nav, no horizontal overflow), and the Saved colour-analysis tab. Not verified: the bookmark with a real signed-in account, a saved report opened from Saved after a real analysis, and a real phone.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

@@ -66,6 +66,13 @@ export function createLooksStore<T extends Saveable = SavedLook>(
     subscribe: store.subscribe,
     getState: store.get,
 
+    // Forgets what was loaded, e.g. when the person signs in or out and the list
+    // should come from a different place.
+    reset() {
+      loading = null;
+      store.set(IDLE_LOOKS as LooksState<T>);
+    },
+
     ensureLoaded(): Promise<void> {
       if (store.get().status === "ready") return Promise.resolve();
       loading ??= load().finally(() => {

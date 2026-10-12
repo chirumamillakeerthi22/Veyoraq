@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
 import { Photo } from "@/components/photo";
-import { exploreHref, fixMyStyleHref, shopHref, stylistHref } from "@/lib/navigation";
+import { exploreHref, fixMyStyleHref, hairStudioHref, shopHref, stylistHref } from "@/lib/navigation";
 import type { PhotoName } from "@/lib/photos";
 
 const steps = [
@@ -178,22 +178,22 @@ export default function Home() {
               </Link>
             </li>
             <li>
-              <div className="flex gap-4 md:block">
+              <Link href={hairStudioHref} className="group flex gap-4 md:block">
                 <Photo
                   name="hair"
                   sizes="(min-width: 768px) 33vw, 112px"
                   className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
                 />
                 <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Coming soon</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
                   <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
                     Hair Studio
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
-                    Hairstyle inspiration shaped by your preferences and how much upkeep you want.
+                    Preview four new hairstyles on your own photo.
                   </p>
                 </div>
-              </div>
+              </Link>
             </li>
             <li className="flex flex-col justify-end border-t border-espresso/20 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0 lg:pl-12">
               <p aria-hidden="true" className="font-display text-xl italic text-olive">

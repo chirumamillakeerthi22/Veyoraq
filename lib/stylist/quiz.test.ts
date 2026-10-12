@@ -7,6 +7,7 @@ import {
   stepProblem,
   toggleLimited,
   toStylistInput,
+  validateDraft,
   type QuizAnswers,
 } from "./quiz";
 import { stylistInputSchema } from "./schema";
@@ -81,5 +82,27 @@ describe("toStylistInput", () => {
       const input = toStylistInput({ ...complete, budgetId: option.id });
       expect(stylistInputSchema.safeParse(input).success).toBe(true);
     }
+  });
+});
+
+describe("quiz draft validation", () => {
+  const draft = { answers: complete, index: 3 };
+
+  it("accepts a draft the quiz itself produced", () => {
+    expect(validateDraft(draft)).toEqual(draft);
+  });
+
+  it("accepts the review step and the very first step", () => {
+    expect(validateDraft({ answers: complete, index: 0 })?.index).toBe(0);
+    expect(validateDraft({ answers: complete, index: 6 })?.index).toBe(6);
+  });
+
+  it("rejects outdated or tampered data instead of crashing", () => {
+    expect(validateDraft(null)).toBeNull();
+    expect(validateDraft({ answers: { ...complete, styles: ["goth"] }, index: 1 })).toBeNull();
+    expect(validateDraft({ answers: { ...complete, budgetId: "free" }, index: 1 })).toBeNull();
+    expect(validateDraft({ answers: complete, index: 7 })).toBeNull();
+    expect(validateDraft({ answers: complete, index: "2" })).toBeNull();
+    expect(validateDraft({ answers: { ...complete, notes: "x".repeat(400) }, index: 1 })).toBeNull();
   });
 });

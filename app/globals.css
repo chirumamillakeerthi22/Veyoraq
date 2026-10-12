@@ -70,6 +70,16 @@ body {
   animation: progress-step 6.6s ease-in-out infinite;
 }
 
+/*
+  While a quiz's fixed Back / Continue bar is on screen (phones only), leave room for
+  it, as well as for the bottom navigation, at the very end of the page.
+*/
+@media (max-width: 767px) {
+  body.has-quiz-bar {
+    padding-bottom: calc(3.5rem + 4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* Quiz questions fade and rise in gently. Reduced motion shortens this to nothing. */
 @keyframes quiz-in {
   from {

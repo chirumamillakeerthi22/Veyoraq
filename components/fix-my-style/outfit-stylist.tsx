@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createDraftStore } from "@/lib/persist/draft";
 import { blobToBase64, prepareImage, validateFile } from "@/lib/fix-my-style/image";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
 import { looksStore, useLooks } from "@/lib/fix-my-style/use-looks";
@@ -27,6 +28,31 @@ type Run =
   | { phase: "error"; message: string; retryable: boolean }
   | { phase: "result"; analysis: OutfitAnalysis; image: ImageState };
 
+/*
+  What survives a refresh. The photo itself cannot be kept (it must not go into
+  localStorage), so only the stage and the written advice are remembered, and the
+  page asks for the photo again.
+*/
+type FixDraft = { stage: "empty" | "photo" | "result"; analysis: OutfitAnalysis | null };
+const emptyFixDraft: FixDraft = { stage: "empty", analysis: null };
+
+const fixDraft = createDraftStore<FixDraft>({
+  key: "veyoraq:draft:fix-my-style",
+  version: 1,
+  initial: emptyFixDraft,
+  validate: (data) => {
+    if (!data || typeof data !== "object") return null;
+    const raw = data as { stage?: unknown; analysis?: unknown };
+    if (raw.stage === "empty") return emptyFixDraft;
+    if (raw.stage === "photo") return { stage: "photo", analysis: null };
+    if (raw.stage === "result") {
+      const parsed = outfitAnalysisSchema.safeParse(raw.analysis);
+      return parsed.success && parsed.data.isOutfit ? { stage: "result", analysis: parsed.data } : null;
+    }
+    return null;
+  },
+});
+
 const ACCEPT = "image/jpeg,image/png,image/webp";
 const OFFLINE = "You appear to be offline. Check your connection and try again.";
 
@@ -44,6 +70,11 @@ function describeImage(image: StyledImage): ImageState | Promise<ImageState> {
 export function OutfitStylist() {
   const looks = useLooks();
   const ai = useAiStatus();
+  const draft = useSyncExternalStore(
+    fixDraft.subscribe,
+    fixDraft.getSnapshot,
+    fixDraft.getServerSnapshot,
+  );
   // Known only after the site has been asked. "unknown" still lets the person try.
   const stylingUnavailable = ai.state === "ready" && !ai.text;
   const imagesOff = ai.state === "ready" && ai.text && !ai.images;
@@ -82,6 +113,7 @@ export function OutfitStylist() {
     setRun({ phase: "idle" });
     setOpenLook(null);
     setSaveState({ state: "idle" });
+    fixDraft.set({ stage: "photo", analysis: null });
   }
 
   function onPick(event: React.ChangeEvent<HTMLInputElement>) {
@@ -97,6 +129,7 @@ export function OutfitStylist() {
     setProblem("");
     setRun({ phase: "idle" });
     setSaveState({ state: "idle" });
+    fixDraft.clear(); // Start Over, Remove Photo and Try Another Style all land here
   }
 
   async function styleOutfit(source: Blob | null = photo) {
@@ -157,6 +190,7 @@ export function OutfitStylist() {
             return;
           }
           setRun({ phase: "result", analysis: parsed.data, image: { state: "pending" } });
+          fixDraft.set({ stage: "result", analysis: parsed.data });
         } else if (event.type === "image" && analysis?.isOutfit) {
           const image = await describeImage(event.data);
           setRun({ phase: "result", analysis, image });
@@ -383,6 +417,33 @@ export function OutfitStylist() {
           )}
         </div>
       </section>
+
+      {/* After a refresh the photo is gone (it is never stored in the browser's text
+          storage), so say so plainly and keep any written advice that was saved. */}
+      {!photo && !openLook && draft.stage !== "empty" && (
+        <section aria-label="Resume" className="mt-10 border-t border-sand pt-8">
+          <div role="status" className="max-w-2xl border border-espresso/40 bg-soft-white p-4 text-sm leading-6">
+            <p className="font-medium">Welcome back.</p>
+            <p className="mt-1">
+              {draft.stage === "result"
+                ? "Your photo can't be kept when the page reloads, so it needs to be added again to see the side-by-side. Your written advice is below."
+                : "You had chosen a photo before the page reloaded. Photos can't be kept across a reload, so please choose it again above."}
+            </p>
+            <button
+              type="button"
+              onClick={() => fixDraft.clear()}
+              className="mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+            >
+              Start over
+            </button>
+          </div>
+          {draft.stage === "result" && draft.analysis && (
+            <div className="mt-8">
+              <Advice analysis={draft.analysis} />
+            </div>
+          )}
+        </section>
+      )}
 
       {showing && (
         <section aria-label="Your styled look" className="mt-12 space-y-10 border-t border-sand pt-10" aria-live="polite">

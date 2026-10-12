@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
 import { NavIconGlyph } from "@/components/nav-icon";
-import { fixMyStyleHref, stylistHref, type NavIcon } from "@/lib/navigation";
+import { fixMyStyleHref, hairStudioHref, stylistHref, type NavIcon } from "@/lib/navigation";
 
 export const metadata: Metadata = {
   title: "Explore",
@@ -35,9 +35,10 @@ const services: Service[] = [
   },
   {
     name: "Hair Studio",
-    text: "Hairstyle inspiration shaped by your preferences and how much upkeep you want.",
+    text: "Upload a photo, answer a short quiz, and preview four new hairstyles on your own photo.",
     icon: "hair",
-    status: "soon",
+    href: hairStudioHref,
+    status: "available",
   },
   {
     name: "Style Journal",

@@ -9,6 +9,7 @@ const base: Product = {
   url: "https://shop.example/linen-shirt",
   price: { amount: 1999, currency: "INR" },
   checkedAt: "2026-10-12",
+  audience: "men",
 };
 
 describe("isShoppable", () => {

@@ -52,7 +52,9 @@ import {
 import { colourReportsStore, useColourReports } from "@/lib/color-analysis/use-colour-reports";
 import { blobToBase64, prepareImage, validateFile } from "@/lib/fix-my-style/image";
 import { filterProducts, noFilters } from "@/lib/shop/match";
-import type { Product } from "@/lib/shop/product";
+import { catalogue } from "@/lib/shop/catalogue";
+import { audienceLabels } from "@/lib/audience";
+import { useAudience } from "@/lib/use-audience";
 
 /* ---------- state ---------- */
 
@@ -65,9 +67,6 @@ const ACCEPT = "image/jpeg,image/png,image/webp";
 const REVIEW = colourSteps.length;
 const OFFLINE = "You appear to be offline. Check your connection and try again.";
 
-// VEYORAQ has no product catalogue yet. When one exists, records go here (or are
-// loaded from it) and Shop My Colors filters them; nothing is ever invented.
-const catalogue: Product[] = [];
 
 const questions: Record<ColourStepId, { title: string; hint: string }> = {
   hair: { title: "What is your natural hair colour?", hint: "Your natural colour if you know it, rather than a dye. “Other or unsure” is fine." },
@@ -204,6 +203,7 @@ function SwatchGroup({
 
 export function ColourAnalysisTool() {
   const ai = useAiStatus();
+  const audience = useAudience();
   const auth = useAuthState();
   const signedIn = auth.status === "signed-in";
   const reports = useColourReports();
@@ -327,7 +327,7 @@ export function ColourAnalysisTool() {
       const response = await fetch("/api/color-analysis/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: await blobToBase64(photo), answers }),
+        body: JSON.stringify({ image: await blobToBase64(photo), answers, audience }),
         signal: controller.signal,
       });
       const data: unknown = await response.json().catch(() => null);
@@ -542,6 +542,7 @@ export function ColourAnalysisTool() {
     const matches = filterProducts(catalogue, allHexes.map((s) => s.hex), {
       ...noFilters,
       colourHex: selectedHex,
+      audience,
     });
     const known = (hex: string) => allHexes.find((s) => s.hex.toLowerCase() === hex.toLowerCase());
 
@@ -669,11 +670,12 @@ export function ColourAnalysisTool() {
             Shop My Colors
           </h2>
           {matches.length > 0 ? (
-            <p className="mt-2 text-sm text-stone">{matches.length} matching products.</p>
+            <p className="mt-2 text-sm text-stone">{matches.length} matching products for {audienceLabels[audience]}.</p>
           ) : (
             <p className="mt-2 max-w-2xl leading-7 text-stone">
-              No matching products are available yet: VEYORAQ doesn’t have a product catalogue
-              connected, so there are no listings, prices or links here. Your colour results are
+              No matching products for {audienceLabels[audience]} are available yet: VEYORAQ
+              doesn’t have a product catalogue connected, so there are no listings, prices or
+              links here. We never show the other audience’s products instead. Your colour results are
               complete without it. Below are outfit ideas built from your palette. They are ideas,
               not products for sale.
             </p>

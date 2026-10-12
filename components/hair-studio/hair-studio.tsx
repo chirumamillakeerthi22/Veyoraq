@@ -40,6 +40,7 @@ import {
 } from "@/lib/hair-studio/quiz";
 import { effortLabels, type HairConcept, type HairEvent, type LookImage } from "@/lib/hair-studio/schema";
 import { hairLooksStore, useHairLooks } from "@/lib/hair-studio/use-hair-looks";
+import { audienceStore } from "@/lib/audience";
 import { createDraftStore } from "@/lib/persist/draft";
 
 /* ---------- state ---------- */
@@ -250,7 +251,7 @@ export function HairStudio() {
       const response = await fetch("/api/hair-studio/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, audience: audienceStore.getSnapshot().audience }),
         signal,
       });
       if (!response.ok || !response.body) {

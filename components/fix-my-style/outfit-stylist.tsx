@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createDraftStore } from "@/lib/persist/draft";
 import { blobToBase64, prepareImage, validateFile } from "@/lib/fix-my-style/image";
 import { useAiStatus } from "@/lib/ai/use-ai-status";
+import { audienceStore } from "@/lib/audience";
 import { looksStore, useLooks } from "@/lib/fix-my-style/use-looks";
 import {
   outfitAnalysisSchema,
@@ -153,7 +154,7 @@ export function OutfitStylist() {
       const response = await fetch("/api/fix-my-style/style", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: await blobToBase64(source) }),
+        body: JSON.stringify({ image: await blobToBase64(source), audience: audienceStore.getSnapshot().audience }),
         signal: controller.signal,
       });
 

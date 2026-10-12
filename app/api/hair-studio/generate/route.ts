@@ -1,3 +1,4 @@
+import { audienceValues } from "@/lib/audience";
 import { errorResponse, isSameOrigin } from "@/lib/fix-my-style/http";
 import { detectImageType } from "@/lib/fix-my-style/image-type";
 import { limits } from "@/lib/fix-my-style/limits";
@@ -22,6 +23,7 @@ const bodySchema = z
     mode: z.enum(["all", "one"]),
     index: z.number().int().min(0).max(3).optional(),
     concept: z.unknown().optional(),
+    audience: z.enum(audienceValues).optional(),
   })
   .strict();
 
@@ -96,7 +98,7 @@ export async function POST(request: Request) {
           return;
         }
 
-        const plan = await planLooks(reference, answers);
+        const plan = await planLooks(reference, answers, parsed.data.audience);
         if (!plan.ok) {
           send({ type: "error", message: plan.message });
           return;

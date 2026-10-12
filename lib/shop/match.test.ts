@@ -14,6 +14,7 @@ const product = (overrides: Partial<Product> = {}): Product => ({
   category: "tops",
   occasions: ["everyday"],
   budgetTier: "mid",
+  audience: "women",
   ...overrides,
 });
 
@@ -55,3 +56,22 @@ describe("filterProducts", () => {
     expect(filterProducts(list, palette, { ...noFilters, retailer: "Other" }).map((p) => p.id)).toEqual(["e"]);
   });
 });
+
+describe("audience separation", () => {
+  const list = [
+    product({ id: "w", audience: "women" }),
+    product({ id: "m", audience: "men" }),
+    product({ id: "u", audience: null }),
+  ];
+
+  it("returns only the selected audience and never unclassified records", () => {
+    expect(filterProducts(list, palette, { ...noFilters, audience: "women" }).map((p) => p.id)).toEqual(["w"]);
+    expect(filterProducts(list, palette, { ...noFilters, audience: "men" }).map((p) => p.id)).toEqual(["m"]);
+  });
+
+  it("returns nothing, not the other audience, when the selected one has no products", () => {
+    const onlyWomen = [product({ id: "w", audience: "women" })];
+    expect(filterProducts(onlyWomen, palette, { ...noFilters, audience: "men" })).toEqual([]);
+  });
+});
+

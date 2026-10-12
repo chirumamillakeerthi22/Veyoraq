@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
+import { ShopCatalogue } from "@/components/shop/shop-catalogue";
 import { stylistHref, wishlistHref } from "@/lib/navigation";
 
 export const metadata: Metadata = {
@@ -33,10 +34,7 @@ export default function ShopPage() {
         <h1 className="mt-4 font-display text-5xl leading-[1.05] md:text-6xl">
           Find pieces that <em>fit your style.</em>
         </h1>
-        <p className="mt-6 text-lg leading-8 text-stone">
-          Product discovery isn&rsquo;t open yet. No products are connected, so there is nothing to
-          browse here today.
-        </p>
+        <ShopCatalogue />
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <ButtonLink href={stylistHref}>Discover My Style</ButtonLink>
           <ButtonLink href={wishlistHref} variant="secondary">

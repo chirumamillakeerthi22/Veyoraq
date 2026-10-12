@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isAudience, type Audience } from "@/lib/audience";
 import { outfitKey } from "@/lib/saved/outfit-key";
 import {
   outfitSchema,
@@ -27,6 +28,9 @@ export type SavedOutfit = {
   // Identifies the look by its content, so the same look is recognised everywhere.
   key: string;
   createdAt: string;
+  // The audience the look was created for, or null for looks saved before this was
+  // recorded (never guessed).
+  audience: Audience | null;
 };
 
 export type SaveResult = { ok: true } | { ok: false; message: string };
@@ -49,6 +53,8 @@ export function toSavedAnswers(answers: SavedAnswers | null): SavedAnswers | nul
     considerations: [...answers.considerations],
     budgetTier: answers.budgetTier,
     currency: answers.currency,
+    // Who the look was made for. Only a valid value is ever kept.
+    ...(isAudience(answers.audience) ? { audience: answers.audience } : {}),
   };
 }
 
@@ -97,6 +103,11 @@ export async function deleteSavedOutfit(db: Db, id: string): Promise<SaveResult>
     : { ok: true };
 }
 
+function audienceOf(answers: unknown): Audience | null {
+  const value = (answers as { audience?: unknown } | null)?.audience;
+  return isAudience(value) ? value : null;
+}
+
 // Keeps only rows whose outfit still passes the same validation as a fresh result.
 export function parseSavedRows(rows: unknown): SavedOutfit[] {
   if (!Array.isArray(rows)) return [];
@@ -104,7 +115,7 @@ export function parseSavedRows(rows: unknown): SavedOutfit[] {
 
   for (const row of rows) {
     if (!row || typeof row !== "object") continue;
-    const { id, name, outfit, created_at: createdAt } = row as Record<string, unknown>;
+    const { id, name, outfit, answers, created_at: createdAt } = row as Record<string, unknown>;
     if (typeof id !== "string" || typeof name !== "string") continue;
 
     const parsed = outfitSchema.safeParse(outfit);
@@ -116,6 +127,7 @@ export function parseSavedRows(rows: unknown): SavedOutfit[] {
       outfit: parsed.data,
       key: outfitKey(parsed.data),
       createdAt: typeof createdAt === "string" ? createdAt : "",
+      audience: audienceOf(answers),
     });
   }
   return saved;

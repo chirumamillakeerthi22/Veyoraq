@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ButtonLink } from "@/components/button-link";
+import { audienceLabels } from "@/lib/audience";
+import { useAudience } from "@/lib/use-audience";
 import { formatPrice, type WishlistItem } from "@/lib/wishlist/wishlist";
 import { useWishlist, wishlistStore } from "@/lib/wishlist/use-wishlist";
 
@@ -71,6 +73,8 @@ function Product({ item, busy }: { item: WishlistItem; busy: boolean }) {
 
 export function WishlistList() {
   const state = useWishlist();
+  const audience = useAudience();
+  const [showAll, setShowAll] = useState(false);
 
   if (state.status === "idle" || state.status === "loading") {
     return <p className="text-stone">Loading your wishlist…</p>;
@@ -123,11 +127,36 @@ export function WishlistList() {
     );
   }
 
+  // The default view shows products for the selected audience, plus older items
+  // whose audience was never recorded (never guessed). The other audience's items are
+  // one tap away and are never changed or removed by switching.
+  const visible = showAll
+    ? state.items
+    : state.items.filter((item) => item.audience === null || item.audience === audience);
+  const hidden = state.items.length - visible.length;
+  const other = audience === "women" ? "men" : "women";
+
   return (
-    <ul className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {state.items.map((item) => (
-        <Product key={item.id} item={item} busy={state.busyIds.includes(item.id)} />
-      ))}
-    </ul>
+    <div>
+      {(hidden > 0 || showAll) && (
+        <p className="mb-6 flex flex-wrap items-center gap-x-3 text-sm text-stone">
+          {showAll
+            ? "Showing every wishlist item."
+            : `Showing items for ${audienceLabels[audience]}. ${hidden} saved for ${audienceLabels[other]} ${hidden === 1 ? "is" : "are"} hidden.`}
+          <button
+            type="button"
+            onClick={() => setShowAll((value) => !value)}
+            className="inline-flex min-h-11 items-center text-espresso underline underline-offset-4"
+          >
+            {showAll ? `Show only ${audienceLabels[audience]}` : "Show all items"}
+          </button>
+        </p>
+      )}
+      <ul className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {visible.map((item) => (
+          <Product key={item.id} item={item} busy={state.busyIds.includes(item.id)} />
+        ))}
+      </ul>
+    </div>
   );
 }

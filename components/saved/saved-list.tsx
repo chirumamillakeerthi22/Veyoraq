@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { ButtonLink } from "@/components/button-link";
 import { SavedCard } from "@/components/saved/saved-card";
+import { audienceLabels } from "@/lib/audience";
 import { savedStore, useSavedOutfits } from "@/lib/saved/use-saved";
+import { useAudience } from "@/lib/use-audience";
 
 function Notice({ children }: { children: React.ReactNode }) {
   return <p className="max-w-md leading-7 text-stone">{children}</p>;
@@ -15,6 +18,8 @@ function Notice({ children }: { children: React.ReactNode }) {
 */
 export function SavedList() {
   const state = useSavedOutfits();
+  const audience = useAudience();
+  const [showAll, setShowAll] = useState(false);
 
   if (state.status === "idle" || state.status === "loading") {
     return <p className="text-stone">Loading your saved looks…</p>;
@@ -67,8 +72,30 @@ export function SavedList() {
     );
   }
 
+  // The default view shows looks made for the selected audience, plus older looks
+  // saved before the audience was recorded (they are never guessed). Looks for the
+  // other audience are one tap away and are never changed or removed by switching.
+  const visible = showAll
+    ? state.items
+    : state.items.filter((item) => item.audience === null || item.audience === audience);
+  const hidden = state.items.length - visible.length;
+
   return (
     <div>
+      {(hidden > 0 || showAll) && (
+        <p className="mb-6 flex flex-wrap items-center gap-x-3 text-sm text-stone">
+          {showAll
+            ? "Showing every saved look."
+            : `Showing looks for ${audienceLabels[audience]}. ${hidden} saved for ${audienceLabels[audience === "women" ? "men" : "women"]} ${hidden === 1 ? "is" : "are"} hidden.`}
+          <button
+            type="button"
+            onClick={() => setShowAll((value) => !value)}
+            className="inline-flex min-h-11 items-center text-espresso underline underline-offset-4"
+          >
+            {showAll ? `Show only ${audienceLabels[audience]}` : "Show all saved looks"}
+          </button>
+        </p>
+      )}
       {state.status === "error" && state.message && (
         <p role="alert" className="mb-6 max-w-md text-sm">
           {state.message}
@@ -76,9 +103,9 @@ export function SavedList() {
       )}
       {/* Two columns on phones (one only on exceptionally narrow screens), more on larger. */}
       <ol className="grid grid-cols-2 gap-x-3 gap-y-8 max-[340px]:grid-cols-1 md:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
-        {state.items.map((item) => (
+        {visible.map((item) => (
           <li key={item.id}>
-            <SavedCard item={item} />
+            <SavedCard item={item} showAudience={showAll} />
           </li>
         ))}
       </ol>

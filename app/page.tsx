@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AudienceBar } from "@/components/audience-selector";
+import { AudienceEntryLink } from "@/components/audience-entry-link";
 import { ButtonLink } from "@/components/button-link";
 import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/container";
@@ -106,8 +106,6 @@ const sectionHeading =
 export default function Home() {
   return (
     <>
-      <AudienceBar />
-
       {/* Hero */}
       <section aria-labelledby="hero-heading">
         <Container className="grid gap-6 pb-10 pt-4 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
@@ -144,6 +142,48 @@ export default function Home() {
             position="50% 20%"
             preload
           />
+        </Container>
+      </section>
+
+      {/* Both audiences, always shown: the homepage does not change with the header choice. */}
+      <section aria-labelledby="audiences-heading" className="border-t border-sand">
+        <Container className="py-12 md:py-20">
+          <div className="max-w-2xl">
+            <Eyebrow>For women and men</Eyebrow>
+            <h2 id="audiences-heading" className={sectionHeading}>
+              Styling for <em>everyone.</em>
+            </h2>
+          </div>
+          <ul className="mt-8 grid grid-cols-2 gap-4 md:mt-12 md:gap-8">
+            {(
+              [
+                { audience: "women", title: "Women’s styling", text: "Outfit ideas, colour and hair for your wardrobe.", photo: "everyday" },
+                { audience: "men", title: "Men’s styling", text: "Outfit ideas, colour and grooming for your wardrobe.", photo: "menCoat" },
+              ] as const
+            ).map((entry) => (
+              <li key={entry.audience}>
+                <AudienceEntryLink
+                  audience={entry.audience}
+                  href={stylistHref}
+                  className="group block"
+                >
+                  <Photo
+                    name={entry.photo}
+                    sizes="(min-width: 768px) 40vw, 50vw"
+                    className="aspect-[4/5]"
+                    position="50% 25%"
+                  />
+                  <p className="mt-4 font-display text-2xl leading-7 md:text-3xl">{entry.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-stone md:text-base md:leading-7">
+                    {entry.text}
+                  </p>
+                  <span className="mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-4">
+                    Start with {entry.audience === "women" ? "Women" : "Men"}
+                  </span>
+                </AudienceEntryLink>
+              </li>
+            ))}
+          </ul>
         </Container>
       </section>
 

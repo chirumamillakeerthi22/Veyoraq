@@ -58,6 +58,18 @@ export const photos = {
     page: "brown-leather-shoes-beside-brown-leather-belt-NKjIT7u5nXE",
     photographer: "@_imd",
   },
+  menCoat: {
+    id: "1619603364937-8d7af41ef206",
+    alt: "A man in a long camel coat over a matching polo-neck, standing against a pale wall",
+    page: "man-in-brown-coat-standing--au3XMzfhro",
+    photographer: "@chernus_tr",
+  },
+  menRelaxed: {
+    id: "1620834767673-19f69709a716",
+    alt: "A man in a light overshirt and grey trousers with white trainers, leaning on a railing",
+    page: "man-in-white-dress-shirt-and-white-pants-sitting-on-white-wooden-fence-during-daytime-Q1oEbLdBP4g",
+    photographer: "@rodsimmer",
+  },
   journalColour: {
     id: "1705412877691-70f6913aaa1e",
     alt: "Overlapping woven fabrics in sage green and warm beige",

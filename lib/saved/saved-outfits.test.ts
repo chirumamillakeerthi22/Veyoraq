@@ -180,3 +180,20 @@ describe("parseSavedRows", () => {
     expect(parseSavedRows(undefined)).toEqual([]);
   });
 });
+
+describe("audience on saved looks", () => {
+  it("keeps a valid audience in the stored answers and drops an invalid one", () => {
+    expect(toSavedAnswers({ ...answers, audience: "men" })?.audience).toBe("men");
+    expect(toSavedAnswers({ ...answers, audience: "boys" } as never)).not.toHaveProperty("audience");
+    expect(toSavedAnswers(answers)).not.toHaveProperty("audience");
+  });
+
+  it("reads the audience back, and leaves older looks as not recorded", () => {
+    const rows = [
+      { id: "1", name: "A", outfit, created_at: "", answers: { audience: "women" } },
+      { id: "2", name: "B", outfit, created_at: "", answers: { audience: "kids" } },
+      { id: "3", name: "C", outfit, created_at: "", answers: null },
+    ];
+    expect(parseSavedRows(rows).map((item) => item.audience)).toEqual(["women", null, null]);
+  });
+});

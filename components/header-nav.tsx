@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment } from "react";
 import { AccountMenu } from "@/components/auth/account-menu";
-import { AudienceMenu } from "@/components/audience-menu";
 import { NavIconGlyph } from "@/components/nav-icon";
 import {
   collectionLinks,
-  exploreHref,
   isActiveLink,
   navLinks,
   shopHref,
@@ -59,27 +56,16 @@ export function HeaderNav() {
       <nav aria-label="Main" className="hidden md:block">
         <ul className="flex items-center gap-6 lg:gap-9">
           {[...navLinks, ...collectionLinks].map((link) => (
-            <Fragment key={link.href}>
-              <li>
-                <TopLink
-                  link={link}
-                  active={isActiveLink(pathname, link.href, link.activeUnder)}
-                  withIcon={collectionLinks.includes(link)}
-                />
-              </li>
-              {/* The audience control sits right beside Explore. */}
-              {link.href === exploreHref && (
-                <li>
-                  <AudienceMenu />
-                </li>
-              )}
-            </Fragment>
+            <li key={link.href}>
+              <TopLink
+                link={link}
+                active={isActiveLink(pathname, link.href, link.activeUnder)}
+                withIcon={collectionLinks.includes(link)}
+              />
+            </li>
           ))}
         </ul>
       </nav>
-
-      {/* Phones: the same control, beside the Shop icon. */}
-      <AudienceMenu className="md:hidden" />
 
       <Link
         href={shopHref}

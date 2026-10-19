@@ -118,13 +118,8 @@ export function AccountMenu() {
               <p className="mt-1 break-all px-2 text-sm">{auth.email ?? "your account"}</p>
               <ul className="mt-3 border-t border-sand pt-2">
                 <li>
-                  <Link href={accountHref} className={itemClass}>
-                    My account
-                  </Link>
-                </li>
-                <li>
                   <Link href={settingsHref} className={itemClass}>
-                    Settings
+                    My account
                   </Link>
                 </li>
               </ul>
@@ -158,7 +153,7 @@ export function AccountMenu() {
               </li>
               <li className="mt-2 border-t border-sand pt-2">
                 <Link href={settingsHref} className={itemClass}>
-                  Settings
+                  My account
                 </Link>
               </li>
             </ul>

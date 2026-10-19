@@ -491,6 +491,15 @@ Not verified: results for several genuinely different faces (only one licensed f
 - Wishlist: `supabase/migrations/20261013000000_wishlist_item_audience.sql` (additive nullable column) is PROPOSED and NOT applied; test `supabase/tests/wishlist_audience_test.sql` is NOT run. The page reads `audience` when present and works without it.
 - Not verified: Colour Analysis, FIX My Style and Hair Studio outputs for Men with real photos; signed-in saved/wishlist views; real phone.
 
+### Account hub, audience preference in My Account, adaptive homepage (2026-10-19, branch `nav-save-footer`, uncommitted)
+
+- The Women/Men control is gone from the header and homepage. It now lives only in My Account > Styling Preferences (`components/account/styling-preferences.tsx`). Guests: browser storage (`veyoraq:audience`). Signed in: also saved in the user's own Supabase `user_metadata.audience` (no table or migration); on sign-in an existing account preference wins, otherwise this browser's choice is written to the account (`lib/audience-sync.ts`, `components/audience-sync.tsx`). The signed-in save is unit-tested with a fake client only; it has NOT been tried against the real project.
+- Homepage: the audience-dependent sections (hero, featured services, Shop the Look, FIX My Style, Journal) are rendered once per audience and the CSS shows only the chosen one (`data-for`, set before first paint by an inline script in `app/layout.tsx`). Content: `lib/home-content.ts`; ten men's Unsplash photos added to `lib/photos.ts`.
+- My Account is `/account/settings` (signed-in `/account` redirects there): Profile, Styling Preferences, Saved content (Saved Styles, Color Analysis reports, Wishlist), Company & Legal, Settings (change password, working "Clear data on this device", honest note that account deletion does not exist).
+- New pages: About (factual), Contact and Terms (explicit "not published" notices, nothing invented), Privacy Policy (drafted from how the app works, marked as needing review). Business details live in `lib/company.ts` and are all empty: operator name, contact email, postal address are MISSING.
+- Large guide footer now only on the homepage; every other page uses the slim footer (which links About, Contact, Privacy, Terms).
+- Not verified: signed-in flows against real Supabase, real phone, Men's output for Color Analysis, FIX My Style and Hair Studio with real photos.
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

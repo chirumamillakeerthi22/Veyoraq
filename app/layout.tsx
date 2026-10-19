@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Geist } from "next/font/google";
+import { AudienceSync } from "@/components/audience-sync";
 import { SignInPrompt } from "@/components/auth/sign-in-prompt";
 import { BottomNav } from "@/components/bottom-nav";
 import { SiteHeader } from "@/components/site-header";
@@ -53,7 +54,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${cormorant.variable} antialiased`}
+      // The inline script below sets data-audience before the page is painted.
+      suppressHydrationWarning
     >
+      <head>
+        {/*
+          Reads the saved audience before first paint so the homepage never flashes the
+          other audience's content. It only reads one localStorage key and sets one
+          attribute; the same value is validated again by the app (lib/audience.ts).
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var r=localStorage.getItem('veyoraq:audience');if(r){var d=JSON.parse(r);if(d&&d.v===1&&d.data&&d.data.audience==='men'&&Date.now()-d.savedAt<31536e6)document.documentElement.setAttribute('data-audience','men')}}catch(e){}",
+          }}
+        />
+      </head>
       <body className="flex min-h-dvh flex-col pb-[calc(3.5rem+env(safe-area-inset-bottom))] font-sans md:pb-0">
         <a
           href="#main"
@@ -73,6 +89,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <BottomNav />
         <SignInPrompt />
+        <AudienceSync />
       </body>
     </html>
   );

@@ -30,6 +30,17 @@
   color-scheme: light;
 }
 
+/*
+  Homepage content for each audience is rendered once per audience, wrapped in
+  data-for. Only the selected audience is displayed; the other is display:none, so
+  its images and text are neither seen nor read out. The <html data-audience>
+  attribute is set before first paint (app/layout.tsx), and no attribute means Women.
+*/
+html:not([data-audience="men"]) [data-for="men"],
+html[data-audience="men"] [data-for="women"] {
+  display: none;
+}
+
 body {
   background: var(--color-ivory);
   color: var(--color-espresso);

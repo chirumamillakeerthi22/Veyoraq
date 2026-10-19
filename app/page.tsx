@@ -1,11 +1,20 @@
 import Link from "next/link";
-import { AudienceEntryLink } from "@/components/audience-entry-link";
 import { ButtonLink } from "@/components/button-link";
-import { SiteFooter } from "@/components/site-footer";
 import { Container } from "@/components/container";
 import { Photo } from "@/components/photo";
+import { SiteFooter } from "@/components/site-footer";
+import { audienceValues, type Audience } from "@/lib/audience";
+import { homeContent } from "@/lib/home-content";
 import { exploreHref, fixMyStyleHref, hairStudioHref, shopHref, stylistHref } from "@/lib/navigation";
-import type { PhotoName } from "@/lib/photos";
+
+/*
+  The homepage follows the audience chosen in My Account (Styling Preferences). The
+  parts that depend on it are rendered once per audience, each wrapped in data-for;
+  the page's CSS shows only the chosen one (and <html data-audience> is set before
+  first paint), so the other audience's images and text are not shown or read out.
+  Sections that are the same for everyone (the brand line, how it works, the closing
+  call to action) are rendered once.
+*/
 
 const steps = [
   {
@@ -22,78 +31,6 @@ const steps = [
   },
 ];
 
-const looks: {
-  title: string;
-  text: string;
-  photo: PhotoName;
-  sizes: string;
-  layout: string;
-  frame: string;
-}[] = [
-  {
-    title: "Effortless Everyday",
-    text: "Soft layers and easy shapes for the days in between.",
-    photo: "everyday",
-    sizes: "(min-width: 768px) 40vw, 100vw",
-    layout: "col-span-2 md:col-span-5",
-    frame: "aspect-[4/5]",
-  },
-  {
-    title: "Modern Minimal",
-    text: "Clean lines, quiet colour, nothing unnecessary.",
-    photo: "minimal",
-    sizes: "(min-width: 768px) 32vw, 50vw",
-    layout: "md:col-span-4 md:mt-28",
-    frame: "aspect-[3/4]",
-  },
-  {
-    title: "Elevated Occasion",
-    text: "Considered pieces for moments worth dressing for.",
-    photo: "occasion",
-    sizes: "(min-width: 768px) 24vw, 50vw",
-    layout: "md:col-span-3 md:mt-12",
-    frame: "aspect-[3/4]",
-  },
-];
-
-const articles: {
-  topic: string;
-  title: string;
-  text: string;
-  photo: PhotoName;
-}[] = [
-  {
-    topic: "Colour",
-    title: "Finding the colours you love to wear",
-    text: "A gentle way to notice which shades you reach for, and how to build on them.",
-    photo: "journalColour",
-  },
-  {
-    topic: "Proportion",
-    title: "Styling silhouettes and proportions",
-    text: "Simple ways to balance shapes, lengths and layers so an outfit feels right to you.",
-    photo: "journalSilhouette",
-  },
-  {
-    topic: "Texture",
-    title: "Creating outfits with prints and textures",
-    text: "How to mix knits, weaves and patterns without overthinking it.",
-    photo: "journalTexture",
-  },
-  {
-    topic: "Everyday",
-    title: "Building versatile everyday looks",
-    text: "A handful of pieces, combined well, that carry you through the week.",
-    photo: "journalEveryday",
-  },
-  {
-    topic: "Occasion",
-    title: "Dressing for different occasions",
-    text: "From relaxed gatherings to formal evenings: starting points for what to wear.",
-    photo: "journalOccasion",
-  },
-];
-
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-xs uppercase tracking-[0.22em] text-stone">{children}</p>
@@ -103,160 +40,143 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 const sectionHeading =
   "mt-4 font-display text-4xl leading-[1.08] md:text-5xl lg:text-6xl";
 
+// Renders a section for each audience. "contents" keeps the wrapper out of the layout.
+function PerAudience({ children }: { children: (audience: Audience) => React.ReactNode }) {
+  return (
+    <>
+      {audienceValues.map((audience) => (
+        <div key={audience} data-for={audience} className="contents">
+          {children(audience)}
+        </div>
+      ))}
+    </>
+  );
+}
+
 export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section aria-labelledby="hero-heading">
-        <Container className="grid gap-6 pb-10 pt-4 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
-          <div>
-            <div className="[@media(max-height:700px)]:hidden md:!block">
-              <Eyebrow>Personal styling, in development</Eyebrow>
-            </div>
-            <h1
-              id="hero-heading"
-              className="mt-3 font-display md:mt-5 text-[clamp(2.75rem,7.2vw,5.75rem)] text-balance leading-[1.02] tracking-tight"
-            >
-              Style that <em>feels like you.</em>
-            </h1>
-            <p className="mt-4 max-w-md text-base leading-7 text-stone md:mt-6 md:text-lg md:leading-8 lg:mt-8">
-              Find your personal style and get outfit ideas that fit your taste and budget.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 md:mt-8 md:flex-col md:items-start lg:mt-10 xl:flex-row">
-              <ButtonLink href={stylistHref} className="w-full md:w-auto">
-                Discover My Style
-              </ButtonLink>
-              {/* One clear action on phones; the Journal is one tap away in Explore. */}
-              <div className="hidden md:block">
-                <ButtonLink href="/#style-journal" variant="secondary">
-                  Explore the Journal
-                </ButtonLink>
-              </div>
-            </div>
-          </div>
-
-          <Photo
-            name="hero"
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="order-first h-[34dvh] min-h-44 md:order-none md:h-auto md:aspect-[3/4] lg:aspect-[4/5]"
-            position="50% 20%"
-            preload
-          />
-        </Container>
-      </section>
-
-      {/* Both audiences, always shown: the homepage does not change with the header choice. */}
-      <section aria-labelledby="audiences-heading" className="border-t border-sand">
-        <Container className="py-12 md:py-20">
-          <div className="max-w-2xl">
-            <Eyebrow>For women and men</Eyebrow>
-            <h2 id="audiences-heading" className={sectionHeading}>
-              Styling for <em>everyone.</em>
-            </h2>
-          </div>
-          <ul className="mt-8 grid grid-cols-2 gap-4 md:mt-12 md:gap-8">
-            {(
-              [
-                { audience: "women", title: "Women’s styling", text: "Outfit ideas, colour and hair for your wardrobe.", photo: "everyday" },
-                { audience: "men", title: "Men’s styling", text: "Outfit ideas, colour and grooming for your wardrobe.", photo: "menCoat" },
-              ] as const
-            ).map((entry) => (
-              <li key={entry.audience}>
-                <AudienceEntryLink
-                  audience={entry.audience}
-                  href={stylistHref}
-                  className="group block"
-                >
-                  <Photo
-                    name={entry.photo}
-                    sizes="(min-width: 768px) 40vw, 50vw"
-                    className="aspect-[4/5]"
-                    position="50% 25%"
-                  />
-                  <p className="mt-4 font-display text-2xl leading-7 md:text-3xl">{entry.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-stone md:text-base md:leading-7">
-                    {entry.text}
+      <PerAudience>
+        {(audience) => {
+          const content = homeContent[audience];
+          return (
+            <section aria-labelledby={`hero-heading-${audience}`}>
+              <Container className="grid gap-6 pb-10 pt-4 md:grid-cols-2 md:items-center md:gap-10 md:pb-24 md:pt-12 lg:gap-20 lg:pb-28 lg:pt-16">
+                <div>
+                  <div className="[@media(max-height:700px)]:hidden md:!block">
+                    <Eyebrow>Personal styling, in development</Eyebrow>
+                  </div>
+                  <h1
+                    id={`hero-heading-${audience}`}
+                    className="mt-3 font-display md:mt-5 text-[clamp(2.75rem,7.2vw,5.75rem)] text-balance leading-[1.02] tracking-tight"
+                  >
+                    Style that <em>feels like you.</em>
+                  </h1>
+                  <p className="mt-4 max-w-md text-base leading-7 text-stone md:mt-6 md:text-lg md:leading-8 lg:mt-8">
+                    {content.heroText}
                   </p>
-                  <span className="mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-4">
-                    Start with {entry.audience === "women" ? "Women" : "Men"}
-                  </span>
-                </AudienceEntryLink>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
+                  <div className="mt-6 flex flex-col gap-3 md:mt-8 md:flex-col md:items-start lg:mt-10 xl:flex-row">
+                    <ButtonLink href={stylistHref} className="w-full md:w-auto">
+                      Discover My Style
+                    </ButtonLink>
+                    {/* One clear action on phones; the Journal is one tap away in Explore. */}
+                    <div className="hidden md:block">
+                      <ButtonLink href="/#style-journal" variant="secondary">
+                        Explore the Journal
+                      </ButtonLink>
+                    </div>
+                  </div>
+                </div>
+
+                <Photo
+                  name={content.heroPhoto}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="order-first h-[34dvh] min-h-44 md:order-none md:h-auto md:aspect-[3/4] lg:aspect-[4/5]"
+                  position={content.heroPosition}
+                  // Only the default audience's hero is preloaded; the other loads when shown.
+                  preload={audience === "women"}
+                />
+              </Container>
+            </section>
+          );
+        }}
+      </PerAudience>
 
       {/* Featured styling services: a short, curated selection. The full list lives at /explore. */}
-      <section
-        id="features"
-        aria-labelledby="features-heading"
-        className="scroll-mt-16 border-t border-sand lg:scroll-mt-20"
-      >
-        <Container className="py-12 md:py-24 lg:py-32">
-          <div className="max-w-3xl">
-            <Eyebrow>Featured services</Eyebrow>
-            <h2 id="features-heading" className={sectionHeading}>
-              Start with what feels <em>most like you.</em>
-            </h2>
-          </div>
-
-          {/* Phones: compact rows with a small photo. md and up: tall photo cards. */}
-          <ul className="mt-8 grid gap-6 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-12">
-            <li>
-              <Link href={stylistHref} className="group flex gap-4 md:block">
-                <Photo
-                  name="colour"
-                  sizes="(min-width: 768px) 33vw, 112px"
-                  className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
-                />
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
-                  <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
-                    Discover Your Style
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
-                    A short quiz that turns your taste, colours and occasions into outfit ideas.
-                  </p>
+      <PerAudience>
+        {(audience) => {
+          const content = homeContent[audience];
+          return (
+            <section
+              id={`features-${audience}`}
+              aria-labelledby={`features-heading-${audience}`}
+              className="scroll-mt-16 border-t border-sand lg:scroll-mt-20"
+            >
+              <Container className="py-12 md:py-24 lg:py-32">
+                <div className="max-w-3xl">
+                  <Eyebrow>Featured services</Eyebrow>
+                  <h2 id={`features-heading-${audience}`} className={sectionHeading}>
+                    Start with what feels <em>most like you.</em>
+                  </h2>
                 </div>
-              </Link>
-            </li>
-            <li>
-              <Link href={hairStudioHref} className="group flex gap-4 md:block">
-                <Photo
-                  name="hair"
-                  sizes="(min-width: 768px) 33vw, 112px"
-                  className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
-                />
-                <div className="min-w-0">
-                  <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
-                  <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
-                    Hair Studio
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
-                    Preview four new hairstyles on your own photo.
-                  </p>
-                </div>
-              </Link>
-            </li>
-            <li className="flex flex-col justify-end border-t border-espresso/20 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0 lg:pl-12">
-              <p aria-hidden="true" className="font-display text-xl italic text-olive">
-                and more
-              </p>
-              <h3 className="mt-3 font-display text-3xl">The full collection.</h3>
-              <p className="mt-2 leading-7 text-stone">
-                FIX My Style, the Journal, colour and fit guidance. See what is ready and what is
-                on its way.
-              </p>
-              <ButtonLink href={exploreHref} variant="secondary" className="mt-6 w-full sm:w-auto">
-                Explore all services
-              </ButtonLink>
-            </li>
-          </ul>
-        </Container>
-      </section>
 
-      {/* How it works */}
+                {/* Phones: compact rows with a small photo. md and up: tall photo cards. */}
+                <ul className="mt-8 grid gap-6 md:mt-16 md:grid-cols-3 md:gap-8 lg:gap-12">
+                  <li>
+                    <Link href={stylistHref} className="group flex gap-4 md:block">
+                      <Photo
+                        name={content.discover.photo}
+                        sizes="(min-width: 768px) 33vw, 112px"
+                        className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
+                        <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
+                          Discover Your Style
+                        </h3>
+                        <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
+                          {content.discover.text}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={hairStudioHref} className="group flex gap-4 md:block">
+                      <Photo
+                        name={content.hair.photo}
+                        sizes="(min-width: 768px) 33vw, 112px"
+                        className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
+                        <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
+                          Hair Studio
+                        </h3>
+                        <p className="mt-1 text-sm leading-6 text-stone md:mt-2 md:text-base md:leading-7">
+                          {content.hair.text}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                  <li className="flex flex-col justify-end border-t border-espresso/20 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0 lg:pl-12">
+                    <p aria-hidden="true" className="font-display text-xl italic text-olive">
+                      and more
+                    </p>
+                    <h3 className="mt-3 font-display text-3xl">The full collection.</h3>
+                    <p className="mt-2 leading-7 text-stone">{content.moreText}</p>
+                    <ButtonLink href={exploreHref} variant="secondary" className="mt-6 w-full sm:w-auto">
+                      Explore all services
+                    </ButtonLink>
+                  </li>
+                </ul>
+              </Container>
+            </section>
+          );
+        }}
+      </PerAudience>
+
+      {/* How it works (the same for everyone) */}
       <section
         id="how-it-works"
         aria-labelledby="how-heading"
@@ -291,159 +211,166 @@ export default function Home() {
       </section>
 
       {/* Shop the Look: editorial looks that lead into Shop. They are inspiration, not products. */}
-      <section id="shop-the-look" aria-labelledby="looks-heading" className="scroll-mt-16 lg:scroll-mt-20">
-        <Container className="py-12 md:py-24 lg:py-32">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
-            <div>
-              <Eyebrow>Shop the Look</Eyebrow>
-              <h2 id="looks-heading" className={sectionHeading}>
-                Three moods, <em>ready to shop.</em>
-              </h2>
-            </div>
-            <div className="max-w-xs">
-              <p className="text-sm leading-6 text-stone">
-                Editorial inspiration only. These images are not products for sale, and Shop
-                has no products connected yet.
-              </p>
-              <ButtonLink href={shopHref} variant="secondary" className="mt-4 w-full sm:w-auto">
-                Go to Shop
-              </ButtonLink>
-            </div>
-          </div>
-          <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:mt-16 md:grid-cols-12 md:items-start md:gap-x-8 lg:gap-x-12">
-            {looks.map((look, index) => (
-              <li key={look.title} className={look.layout}>
-                <figure className="group">
-                  <Photo
-                    name={look.photo}
-                    sizes={look.sizes}
-                    className={look.frame}
-                  />
-                  <figcaption className="mt-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-stone">
-                      Look 0{index + 1}
-                    </p>
-                    <h3 className="mt-2 font-display text-2xl md:text-[1.75rem]">
-                      {look.title}
-                    </h3>
-                    <p className="mt-1 leading-7 text-stone">{look.text}</p>
-                  </figcaption>
-                </figure>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
+      <div id="shop-the-look" className="scroll-mt-16 lg:scroll-mt-20" />
+      <PerAudience>
+        {(audience) => {
+          const content = homeContent[audience];
+          return (
+            <section aria-labelledby={`looks-heading-${audience}`}>
+              <Container className="py-12 md:py-24 lg:py-32">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
+                  <div>
+                    <Eyebrow>Shop the Look</Eyebrow>
+                    <h2 id={`looks-heading-${audience}`} className={sectionHeading}>
+                      {content.looksHeading.pre}
+                      <em>{content.looksHeading.em}</em>
+                    </h2>
+                  </div>
+                  <div className="max-w-xs">
+                    <p className="text-sm leading-6 text-stone">{content.looksNote}</p>
+                    <ButtonLink href={shopHref} variant="secondary" className="mt-4 w-full sm:w-auto">
+                      Go to Shop
+                    </ButtonLink>
+                  </div>
+                </div>
+                <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:mt-16 md:grid-cols-12 md:items-start md:gap-x-8 lg:gap-x-12">
+                  {content.looks.map((look, index) => (
+                    <li key={look.title} className={look.layout}>
+                      <figure className="group">
+                        <Photo name={look.photo} sizes={look.sizes} className={look.frame} />
+                        <figcaption className="mt-4">
+                          <p className="text-xs uppercase tracking-[0.22em] text-stone">
+                            Look 0{index + 1}
+                          </p>
+                          <h3 className="mt-2 font-display text-2xl md:text-[1.75rem]">
+                            {look.title}
+                          </h3>
+                          <p className="mt-1 leading-7 text-stone">{look.text}</p>
+                        </figcaption>
+                      </figure>
+                    </li>
+                  ))}
+                </ul>
+              </Container>
+            </section>
+          );
+        }}
+      </PerAudience>
 
       {/* FIX My Style spotlight */}
-      <section
-        id="fix-my-style"
-        aria-labelledby="fix-heading"
-        className="scroll-mt-16 bg-sand/60 lg:scroll-mt-20"
-      >
-        <Container className="grid gap-10 py-16 md:grid-cols-2 md:items-center md:gap-12 md:py-24 lg:gap-24 lg:py-28">
-          <Photo
-            name="flatLay"
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="aspect-square md:aspect-[4/5]"
-          />
-          <div>
-            <span className="inline-block border border-espresso/25 px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.18em] text-stone">
-              Available now
-            </span>
-            <p className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
-              FIX My Style
-            </p>
-            <h2 id="fix-heading" className={sectionHeading}>
-              More ways to wear what you already own.
-            </h2>
-            <p className="mt-6 max-w-md text-lg leading-8 text-stone">
-              Your wardrobe has more possibilities than you think. Explore
-              fresh combinations, thoughtful layering, and new ways to style
-              your favourite pieces. Upload a photo of your outfit to begin.
-            </p>
-            <ButtonLink href={fixMyStyleHref} className="mt-8 w-full sm:w-auto">
-              Open FIX My Style
-            </ButtonLink>
-          </div>
-        </Container>
-      </section>
+      <div id="fix-my-style" className="scroll-mt-16 lg:scroll-mt-20" />
+      <PerAudience>
+        {(audience) => (
+          <section aria-labelledby={`fix-heading-${audience}`} className="bg-sand/60">
+            <Container className="grid gap-10 py-16 md:grid-cols-2 md:items-center md:gap-12 md:py-24 lg:gap-24 lg:py-28">
+              <Photo
+                name={homeContent[audience].fix.photo}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="aspect-square md:aspect-[4/5]"
+              />
+              <div>
+                <span className="inline-block border border-espresso/25 px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.18em] text-stone">
+                  Available now
+                </span>
+                <p className="mt-6 text-xs uppercase tracking-[0.22em] text-stone">
+                  FIX My Style
+                </p>
+                <h2 id={`fix-heading-${audience}`} className={sectionHeading}>
+                  More ways to wear what you already own.
+                </h2>
+                <p className="mt-6 max-w-md text-lg leading-8 text-stone">
+                  Your wardrobe has more possibilities than you think. Explore
+                  fresh combinations, thoughtful layering, and new ways to style
+                  your favourite pieces. Upload a photo of your outfit to begin.
+                </p>
+                <ButtonLink href={fixMyStyleHref} className="mt-8 w-full sm:w-auto">
+                  Open FIX My Style
+                </ButtonLink>
+              </div>
+            </Container>
+          </section>
+        )}
+      </PerAudience>
 
       {/* Style Journal preview */}
-      <section
-        id="style-journal"
-        aria-labelledby="journal-heading"
-        className="scroll-mt-16 lg:scroll-mt-20"
-      >
-        <Container className="py-12 md:py-24 lg:py-32">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
-            <div>
-              <Eyebrow>Style Journal</Eyebrow>
-              <h2 id="journal-heading" className={sectionHeading}>
-                Practical guides, <em>kindly written.</em>
-              </h2>
-            </div>
-            <p className="max-w-xs text-sm leading-6 text-stone">
-              A preview of what we&rsquo;re writing. The Journal isn&rsquo;t
-              published yet.
-            </p>
-          </div>
+      <div id="style-journal" className="scroll-mt-16 lg:scroll-mt-20" />
+      <PerAudience>
+        {(audience) => {
+          const articles = homeContent[audience].articles;
+          return (
+            <section aria-labelledby={`journal-heading-${audience}`}>
+              <Container className="py-12 md:py-24 lg:py-32">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
+                  <div>
+                    <Eyebrow>Style Journal</Eyebrow>
+                    <h2 id={`journal-heading-${audience}`} className={sectionHeading}>
+                      Practical guides, <em>kindly written.</em>
+                    </h2>
+                  </div>
+                  <p className="max-w-xs text-sm leading-6 text-stone">
+                    A preview of what we&rsquo;re writing. The Journal isn&rsquo;t
+                    published yet.
+                  </p>
+                </div>
 
-          <ul className="mt-10 grid gap-10 md:mt-16 lg:grid-cols-12 lg:gap-16">
-            <li className="lg:col-span-5">
-              <article>
-                <Photo
-                  name={articles[0].photo}
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  className="aspect-[4/3] lg:aspect-[4/5]"
-                />
-                <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">
-                  {articles[0].topic}
-                </p>
-                <h3 className="mt-2 font-display text-3xl md:text-4xl">
-                  {articles[0].title}
-                </h3>
-                <p className="mt-3 max-w-md leading-7 text-stone">
-                  {articles[0].text}
-                </p>
-              </article>
-            </li>
-            <li className="lg:col-span-7">
-              <ul>
-                {articles.slice(1).map((article, index) => (
-                  <li
-                    key={article.title}
-                    className={`border-t border-sand py-6 first:border-t-0 first:pt-0 lg:first:border-t lg:first:pt-6 ${
-                      index >= 2 ? "hidden md:block" : ""
-                    }`}
-                  >
-                    <article className="flex gap-5 md:gap-8">
+                <ul className="mt-10 grid gap-10 md:mt-16 lg:grid-cols-12 lg:gap-16">
+                  <li className="lg:col-span-5">
+                    <article>
                       <Photo
-                        name={article.photo}
-                        sizes="160px"
-                        className="aspect-square w-24 shrink-0 md:w-36"
+                        name={articles[0].photo}
+                        sizes="(min-width: 1024px) 40vw, 100vw"
+                        className="aspect-[4/3] lg:aspect-[4/5]"
                       />
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.22em] text-stone">
-                          {article.topic}
-                        </p>
-                        <h3 className="mt-2 font-display text-2xl leading-7 md:text-[1.75rem] md:leading-9">
-                          {article.title}
-                        </h3>
-                        <p className="mt-2 leading-7 text-stone">
-                          {article.text}
-                        </p>
-                      </div>
+                      <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">
+                        {articles[0].topic}
+                      </p>
+                      <h3 className="mt-2 font-display text-3xl md:text-4xl">
+                        {articles[0].title}
+                      </h3>
+                      <p className="mt-3 max-w-md leading-7 text-stone">
+                        {articles[0].text}
+                      </p>
                     </article>
                   </li>
-                ))}
-              </ul>
-            </li>
-          </ul>
-        </Container>
-      </section>
+                  <li className="lg:col-span-7">
+                    <ul>
+                      {articles.slice(1).map((article, index) => (
+                        <li
+                          key={article.title}
+                          className={`border-t border-sand py-6 first:border-t-0 first:pt-0 lg:first:border-t lg:first:pt-6 ${
+                            index >= 2 ? "hidden md:block" : ""
+                          }`}
+                        >
+                          <article className="flex gap-5 md:gap-8">
+                            <Photo
+                              name={article.photo}
+                              sizes="160px"
+                              className="aspect-square w-24 shrink-0 md:w-36"
+                            />
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.22em] text-stone">
+                                {article.topic}
+                              </p>
+                              <h3 className="mt-2 font-display text-2xl leading-7 md:text-[1.75rem] md:leading-9">
+                                {article.title}
+                              </h3>
+                              <p className="mt-2 leading-7 text-stone">
+                                {article.text}
+                              </p>
+                            </div>
+                          </article>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                </ul>
+              </Container>
+            </section>
+          );
+        }}
+      </PerAudience>
 
-      {/* Final call to action */}
+      {/* Final call to action (the same for everyone) */}
       <section
         aria-labelledby="closing-heading"
         className="on-dark bg-espresso text-ivory"

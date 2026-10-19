@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { SignInPanel } from "@/components/auth/sign-in-panel";
-import { SignOutButton } from "@/components/auth/sign-out-button";
-import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
 import { describeSignInError } from "@/lib/auth/messages";
 import { fetchProviderAvailability } from "@/lib/supabase/auth-settings";
@@ -13,11 +12,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "Account",
   description: "Sign in to VEYORAQ with Google, or an email and password.",
-};
-
-const providerLabels: Record<string, string> = {
-  google: "Google",
-  email: "email and password",
 };
 
 // Reading the login session happens at request time, so it streams in behind Suspense.
@@ -69,27 +63,9 @@ async function AccountContent({
     );
   }
 
-  const provider = providerLabels[user.app_metadata?.provider as string] ?? "your account";
-
-  return (
-    <div>
-      <p className="text-sm text-stone">Signed in as</p>
-      <p className="mt-1 break-all text-xl">{user.email ?? "your account"}</p>
-      <p className="mt-1 text-sm text-stone">Signed in with {provider}.</p>
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/saved">Saved Styles</ButtonLink>
-        <ButtonLink href="/wishlist" variant="secondary">
-          Wishlist
-        </ButtonLink>
-      </div>
-      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/account/settings" variant="secondary">
-          Settings
-        </ButtonLink>
-        <SignOutButton />
-      </div>
-    </div>
-  );
+  // A signed-in visitor's account is the My Account page (profile, preferences, saved
+  // content, company and legal links, and settings).
+  redirect("/account/settings");
 }
 
 /*

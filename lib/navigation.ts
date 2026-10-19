@@ -98,10 +98,10 @@ export const footerGroups: {
   {
     title: "Company",
     links: [
-      { label: "About" },
-      { label: "Contact" },
-      { label: "Privacy" },
-      { label: "Terms" },
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];

@@ -1,110 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
+import { CoverImage } from "@/components/cover-image";
 import { ExploreAudienceNote } from "@/components/explore-audience-note";
-import { NavIconGlyph } from "@/components/nav-icon";
-import {
-  colourAnalysisHref,
-  fixMyStyleHref,
-  hairStudioHref,
-  stylistHref,
-  type NavIcon,
-} from "@/lib/navigation";
+import { PerAudience } from "@/components/per-audience";
+import { exploreServices, statusLabel, type ExploreService } from "@/lib/explore-content";
+import type { Audience } from "@/lib/audience";
 
 export const metadata: Metadata = {
   title: "Explore",
   description: "Every VEYORAQ styling service in one place.",
 };
 
-type Service = {
-  name: string;
-  text: string;
-  icon: NavIcon;
-  // Only services that have a page to open are given an href.
-  href?: string;
-  status: "available" | "preview" | "soon";
-};
-
-const services: Service[] = [
-  {
-    name: "Discover Your Style",
-    text: "A short quiz that turns your taste, colours and occasions into outfit ideas.",
-    icon: "discover",
-    href: stylistHref,
-    status: "available",
-  },
-  {
-    name: "FIX My Style",
-    text: "Upload a photo of your outfit and see better ways to wear what you already own.",
-    icon: "fix",
-    href: fixMyStyleHref,
-    status: "available",
-  },
-  {
-    name: "Hair Studio",
-    text: "Upload a photo, answer a short quiz, and preview four new hairstyles on your own photo.",
-    icon: "hair",
-    href: hairStudioHref,
-    status: "available",
-  },
-  {
-    name: "Style Journal",
-    text: "Practical, kindly written guides on colour, proportion, texture and occasions.",
-    icon: "journal",
-    href: "/#style-journal",
-    status: "preview",
-  },
-  {
-    name: "Colour Analysis",
-    text: "Estimate your likely colour season and get a personal palette from a photo and a short quiz.",
-    icon: "discover",
-    href: colourAnalysisHref,
-    status: "available",
-  },
-  {
-    name: "Fit guidance",
-    text: "Optional body profile and fit preferences, offered as guidance rather than rules.",
-    icon: "fix",
-    status: "soon",
-  },
-];
-
-const statusLabel: Record<Service["status"], string> = {
-  available: "Available",
-  preview: "Preview",
-  soon: "Coming soon",
-};
-
-function ServiceCard({ service }: { service: Service }) {
-  const body = (
-    <>
-      <NavIconGlyph
-        name={service.icon}
-        className="h-6 w-6 text-gold transition-transform duration-300 group-hover:-translate-y-0.5"
-      />
-      <h2 className="mt-5 font-display text-2xl leading-8">{service.name}</h2>
-      <p className="mt-2 leading-7 text-stone">{service.text}</p>
-      <p className="mt-5 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-stone">
-        <span className="border border-espresso/25 px-2 py-1">{statusLabel[service.status]}</span>
-        {service.href && (
-          <span aria-hidden="true" className="text-espresso">
-            Open →
-          </span>
-        )}
-      </p>
-    </>
-  );
-
-  const base = "group block h-full border border-sand bg-soft-white p-6";
-  return service.href ? (
+// One service: the whole card is the link. The photo is the focus, with the name and
+// a short description underneath where they stay easy to read.
+function ServiceCard({ service, audience }: { service: ExploreService; audience: Audience }) {
+  return (
     <Link
       href={service.href}
-      className={`${base} transition-colors duration-200 hover:border-espresso/40`}
+      className="group block h-full overflow-hidden rounded-lg border border-sand bg-soft-white transition-[border-color,box-shadow,transform] duration-300 hover:border-espresso/40 hover:shadow-md hover:shadow-espresso/5 motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0"
     >
-      {body}
+      <CoverImage
+        name={service.cover[audience]}
+        icon={service.icon}
+        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+        className="aspect-[4/3] w-full"
+        position="50% 30%"
+      />
+      <div className="p-5 sm:p-6">
+        <p className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-stone">
+          <span className="border border-espresso/25 px-2 py-1">{statusLabel[service.status]}</span>
+          <span aria-hidden="true" className="text-espresso transition-transform duration-300 group-hover:translate-x-0.5">
+            Open →
+          </span>
+        </p>
+        <h2 className="mt-4 font-display text-2xl leading-8">{service.name}</h2>
+        <p className="mt-2 leading-7 text-stone">{service.textFor?.[audience] ?? service.text}</p>
+      </div>
     </Link>
-  ) : (
-    <div className={base}>{body}</div>
   );
 }
 
@@ -122,13 +55,18 @@ export default function ExplorePage() {
         <ExploreAudienceNote />
       </div>
 
-      <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-        {services.map((service) => (
-          <li key={service.name}>
-            <ServiceCard service={service} />
-          </li>
-        ))}
-      </ul>
+      {/* Cover photos follow the audience chosen in My Account. */}
+      <PerAudience>
+        {(audience) => (
+          <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+            {exploreServices.map((service) => (
+              <li key={service.name}>
+                <ServiceCard service={service} audience={audience} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </PerAudience>
     </Container>
   );
 }

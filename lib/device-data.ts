@@ -1,11 +1,16 @@
 /*
   Removing what VEYORAQ keeps in this browser: small items in localStorage (all named
-  "veyoraq:...") and the three on-device looks databases. It never touches the
+  "veyoraq:...") and the on-device looks and reports databases. It never touches the
   account or anything saved to it, and it does not sign anyone out.
 */
 
 export const DEVICE_STORAGE_PREFIX = "veyoraq:";
-export const DEVICE_DATABASES = ["veyoraq-colour-reports", "veyoraq-hair-looks", "veyoraq-looks"] as const;
+export const DEVICE_DATABASES = [
+  "veyoraq-colour-reports",
+  "veyoraq-hair-looks",
+  "veyoraq-looks",
+  "veyoraq-fit-reports",
+] as const;
 
 type KeyedStorage = Pick<Storage, "length" | "key" | "removeItem">;
 

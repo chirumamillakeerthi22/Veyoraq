@@ -47,6 +47,13 @@ export default function AboutPage() {
             </Link>
             : four hairstyle ideas based on your photo and answers.
           </li>
+          <li>
+            <Link href="/fit-guidance" className={link}>
+              Fit Guidance
+            </Link>
+            : cuts, proportions and silhouettes you may enjoy, from a description, measurements,
+            sizes or an optional photo.
+          </li>
           <li>Saved Styles, your saved Color Analysis reports and a Wishlist, once you sign in.</li>
         </ul>
       </LegalSection>

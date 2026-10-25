@@ -57,9 +57,20 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Fit Guidance">
+        <p>
+          Fit Guidance asks for a body-shape description, and optionally measurements, usual
+          clothing sizes or a full-body photo. Your answers (including any measurements you type)
+          stay in this browser for about a week unless you press Start over. A saved fit guidance
+          report is kept on this device only, not in your account. A photo is never kept in your
+          browser: if you add one, it is sent securely to Google&rsquo;s Gemini only when you finish the
+          questions, to note general proportions, and VEYORAQ does not store or log it.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Photos">
         <p>
-          Color Analysis, FIX My Style and Hair Studio use a photo you choose. The photo is
+          Color Analysis, FIX My Style, Hair Studio and Fit Guidance use a photo you choose. The photo is
           resized on your device, then sent to our server and on to Google&rsquo;s Gemini to create
           your result. VEYORAQ does not store it and does not log it. Google handles it under its
           own terms for the Gemini service, which we do not control.

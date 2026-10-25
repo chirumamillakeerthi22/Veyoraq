@@ -70,6 +70,12 @@ export const photos = {
     page: "man-in-white-dress-shirt-and-white-pants-sitting-on-white-wooden-fence-during-daytime-Q1oEbLdBP4g",
     photographer: "@rodsimmer",
   },
+  fitTape: {
+    id: "1644530186995-27e46f340fb1",
+    alt: "A cloth measuring tape and a pair of scissors on a linen-covered table",
+    page: "1eV-OecIKgI",
+    photographer: "@hudsoncrafted",
+  },
   menHair: {
     id: "1593702275687-f8b402bf1fb5",
     alt: "A barber giving a man a neat short fade, close up",

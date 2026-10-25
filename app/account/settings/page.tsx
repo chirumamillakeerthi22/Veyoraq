@@ -136,12 +136,13 @@ async function AccountHub() {
         <Card
           id="saved"
           title="Your Saved Content"
-          description="Three separate collections. Changing your styling preference never changes or deletes any of them."
+          description="Separate collections. Changing your styling preference never changes or deletes any of them."
         >
           <LinkList
             links={[
               { label: "Saved Styles", href: "/saved", note: "Outfit ideas you saved" },
               { label: "Your Color Analysis", href: "/saved#color-analysis", note: "Your saved personal colour reports" },
+              { label: "Fit Guidance", href: "/saved#fit-guidance", note: "Fit reports saved on this device" },
               { label: "Wishlist", href: "/wishlist", note: "Individual products you may want to buy" },
             ]}
           />

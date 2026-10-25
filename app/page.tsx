@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
+import { PerAudience } from "@/components/per-audience";
 import { Photo } from "@/components/photo";
 import { SiteFooter } from "@/components/site-footer";
-import { audienceValues, type Audience } from "@/lib/audience";
 import { homeContent } from "@/lib/home-content";
 import { exploreHref, fixMyStyleHref, hairStudioHref, shopHref, stylistHref } from "@/lib/navigation";
 
@@ -39,19 +39,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 const sectionHeading =
   "mt-4 font-display text-4xl leading-[1.08] md:text-5xl lg:text-6xl";
-
-// Renders a section for each audience. "contents" keeps the wrapper out of the layout.
-function PerAudience({ children }: { children: (audience: Audience) => React.ReactNode }) {
-  return (
-    <>
-      {audienceValues.map((audience) => (
-        <div key={audience} data-for={audience} className="contents">
-          {children(audience)}
-        </div>
-      ))}
-    </>
-  );
-}
 
 export default function Home() {
   return (

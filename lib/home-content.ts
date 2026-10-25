@@ -105,3 +105,15 @@ export const homeContent: Record<Audience, HomeContent> = {
     ],
   },
 };
+
+/*
+  The Journal teasers most relevant to fit, for the audience. The Journal is a preview
+  (no articles are published yet), so these are the same teasers shown on the
+  homepage, never separate or invented articles.
+*/
+export function fitJournalPicks(audience: Audience): HomeArticle[] {
+  const { articles } = homeContent[audience];
+  return ["Proportion", "Everyday", "Colour"]
+    .map((topic) => articles.find((article) => article.topic === topic))
+    .filter((article): article is HomeArticle => Boolean(article));
+}

@@ -15,3 +15,15 @@ export const catalogue: Product[] = [];
 export function productsForAudience(audience: Audience, products: Product[] = catalogue): Product[] {
   return products.filter((product) => product.audience === audience && isShoppable(product));
 }
+
+// Buyable products for this audience whose category is one of the garment types
+// chosen. With no categories chosen, every category for the audience qualifies.
+export function productsForFit(
+  audience: Audience,
+  categories: string[],
+  products: Product[] = catalogue,
+): Product[] {
+  return productsForAudience(audience, products).filter(
+    (product) => categories.length === 0 || (product.category ? categories.includes(product.category) : false),
+  );
+}

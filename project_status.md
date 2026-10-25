@@ -500,6 +500,16 @@ Not verified: results for several genuinely different faces (only one licensed f
 - Large guide footer now only on the homepage; every other page uses the slim footer (which links About, Contact, Privacy, Terms).
 - Not verified: signed-in flows against real Supabase, real phone, Men's output for Color Analysis, FIX My Style and Hair Studio with real photos.
 
+### Explore covers, Fit Guidance, footer cleanup (2026-10-25, branch `nav-save-footer`, uncommitted)
+
+- Explore: every service is a full-card link with a cover photo per audience (`lib/explore-content.ts`, `components/cover-image.tsx` with an icon fallback if an image fails). Fit Guidance (now available) and the Journal preview are included. Fit Guidance uses one neutral measuring-tape photo for both audiences.
+- Fit Guidance (`/fit-guidance`): intro with three options; known shape; measurements (cm/in, validated, tentative pattern from proportions only); usual sizes (supporting context only); optional full-body photo; five skippable questions; report with profile, limitations, silhouettes, tops, bottoms, dresses (women), lengths, layering, shopping fit details, notes, personal colours (reuses the newest saved Color Analysis), Shop Your Fit (real catalogue only; empty today) and a secondary Style Journal teaser section. Guidance text is written content (`lib/fit-guidance/content.ts`), not AI output.
+- Photo: sent only when the questions are finished, to `/api/fit-guidance/analyze` (same-origin check, magic-byte type check, size limit, rate limit), which uses the vision-capable Gemini text model. It returns cautious observations plus a tentative descriptor, and may answer "unsure". Verified with a real call. The photo is never stored or put in browser storage.
+- Saving: a report can be saved on this device only (IndexedDB `veyoraq-fit-reports`), shown in a new "Fit Guidance" tab on Saved. There is no account table for it, so it does not follow the person between devices. Draft progress (including typed measurements) stays in localStorage for about a week.
+- Style Journal: the Journal is a preview with no published articles, so the Fit Guidance page reuses the existing homepage teasers (fit, everyday, colour) and links to that section; no articles were invented.
+- Footer: the full footer is rendered by the homepage only. The slim footer and all per-route footer layouts were removed. Legal pages are reached from My Account and the homepage footer.
+- Not done: face-shape input (the app has no face-shape data and the brief says only when available); size and fit attributes on products (the product record has none).
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

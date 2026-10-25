@@ -23,6 +23,7 @@ export const stylistHref = "/stylist";
 export const fixMyStyleHref = "/fix-my-style";
 export const hairStudioHref = "/hair-studio";
 export const colourAnalysisHref = "/color-analysis";
+export const fitGuidanceHref = "/fit-guidance";
 export const accountHref = "/account";
 
 // The directory of styling services, and product discovery.
@@ -47,7 +48,7 @@ export const navLinks: NavLink[] = [
     label: "Explore",
     href: exploreHref,
     icon: "discover",
-    activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref],
+    activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref, fitGuidanceHref],
   },
   { label: "Shop", href: shopHref, icon: "shop" },
 ];
@@ -56,7 +57,7 @@ export const navLinks: NavLink[] = [
 // from Explore, so the bar keeps to four destinations.
 export const bottomNavLinks: NavLink[] = [
   { label: "Home", href: "/", icon: "home" },
-  { label: "Explore", href: exploreHref, icon: "discover", activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref] },
+  { label: "Explore", href: exploreHref, icon: "discover", activeUnder: [stylistHref, fixMyStyleHref, hairStudioHref, colourAnalysisHref, fitGuidanceHref] },
   collectionLinks[0],
   collectionLinks[1],
 ];
@@ -74,16 +75,18 @@ export function isActiveLink(pathname: string, href: string, alsoUnder: string[]
   );
 }
 
-// Footer entries without an href are not built yet and are shown as "Soon".
+// The homepage footer's link groups (the footer is rendered on the homepage only).
 export const footerGroups: {
   title: string;
-  links: { label: string; href?: string }[];
+  links: { label: string; href: string }[];
 }[] = [
   {
     title: "Explore",
     links: [
+      { label: "Home", href: "/" },
       { label: "All services", href: exploreHref },
       { label: "Discover Your Style", href: stylistHref },
+      { label: "Fit Guidance", href: fitGuidanceHref },
       { label: "Style Journal", href: "/#style-journal" },
       { label: "Shop", href: shopHref },
     ],
@@ -91,8 +94,10 @@ export const footerGroups: {
   {
     title: "Your style",
     links: [
-      { label: "Saved Styles", href: "/saved" },
-      { label: "Wishlist", href: "/wishlist" },
+      { label: "Saved Styles", href: savedHref },
+      { label: "Your Color Analysis", href: `${savedHref}#color-analysis` },
+      { label: "Wishlist", href: wishlistHref },
+      { label: "My Account", href: settingsHref },
     ],
   },
   {
@@ -100,8 +105,8 @@ export const footerGroups: {
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms and Conditions", href: "/terms" },
     ],
   },
 ];

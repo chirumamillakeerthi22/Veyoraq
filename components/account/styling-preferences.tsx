@@ -70,7 +70,7 @@ export function StylingPreferences() {
               aria-checked={selected}
               onClick={() => void choose(value)}
               className={`flex min-h-12 items-center justify-center gap-2 text-sm transition-colors duration-200 ${
-                selected ? "bg-espresso text-ivory" : "hover:bg-espresso/5"
+                selected ? "bg-burgundy text-ivory" : "hover:bg-espresso/5"
               }`}
             >
               {selected && (

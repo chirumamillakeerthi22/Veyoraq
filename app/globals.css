@@ -7,16 +7,27 @@
   so body copy uses espresso and secondary copy uses stone.
 */
 @theme {
-  --color-ivory: #f8f6f2;
+  /* Backgrounds: warm ivory pages, soft cream for editorial bands. */
+  --color-ivory: #faf7f2;
   --color-soft-white: #fffefc;
-  --color-espresso: #29231f;
+  --color-cream: #f0e7dc;
+  /* Text */
+  --color-espresso: #30251f;
   --color-stone: #5f554d;
+  /* Brand accent. Muted burgundy: primary buttons, active navigation and key accents
+     only. 7.7:1 on ivory, so it is safe for text and for button fills with ivory text. */
+  --color-burgundy: #7d3948;
+  --color-burgundy-deep: #632c39;
+  /* Secondary accents for tags and quiet backgrounds. Dusty rose and sage are too light
+     for small text on ivory: pair them with espresso text, or use them decoratively. */
+  --color-rose: #c58e94;
+  --color-sage: #8c9980;
+  /* A deeper sage that is dark enough for large numerals and italic accents. */
+  --color-olive: #66745a;
   --color-taupe: #a89a8b;
-  --color-rose: #c69b98;
-  --color-olive: #7a8068;
-  --color-sand: #e8e0d7;
-  /* Sidebar atelier palette. Gold is decorative only: it is too light for small text. */
-  --color-champagne: #f1e6d3;
+  --color-sand: #e6dbcf;
+  --color-champagne: #f0e7dc;
+  /* Gold is decorative only: it is too light for small text. */
   --color-gold: #b39556;
 }
 

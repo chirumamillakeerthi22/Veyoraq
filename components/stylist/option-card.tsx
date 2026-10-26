@@ -43,7 +43,7 @@ export function OptionCard({
         className="peer sr-only"
       />
       <span
-        className={`relative flex min-h-24 h-full flex-col justify-end gap-1 border p-4 transition-colors duration-200 hover:border-espresso/50 peer-checked:border-espresso peer-checked:bg-espresso peer-checked:text-ivory peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-espresso ${
+        className={`relative flex min-h-24 h-full flex-col justify-end gap-1 border p-4 transition-colors duration-200 hover:border-espresso/50 peer-checked:border-burgundy peer-checked:bg-burgundy peer-checked:text-ivory peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-espresso ${
           tint ?? "bg-soft-white"
         } border-sand`}
       >
@@ -54,7 +54,7 @@ export function OptionCard({
         <span
           aria-hidden="true"
           className={`absolute right-3 top-3 flex h-6 w-6 items-center justify-center border text-xs ${
-            checked ? "border-ivory bg-ivory text-espresso" : "border-espresso/30 text-transparent"
+            checked ? "border-ivory bg-ivory text-burgundy" : "border-espresso/30 text-transparent"
           }`}
         >
           ✓

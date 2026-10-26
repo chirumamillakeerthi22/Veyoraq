@@ -4,7 +4,7 @@ import type { OutfitAnalysis, StyledImage } from "@/lib/fix-my-style/schema";
 import { itemCategoryLabels } from "@/lib/fix-my-style/schema";
 
 export const primaryButton =
-  "inline-flex min-h-12 items-center justify-center px-6 text-center text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-200 bg-espresso text-ivory hover:bg-stone disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-12 items-center justify-center px-6 text-center text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-200 bg-burgundy text-ivory hover:bg-burgundy-deep disabled:cursor-not-allowed disabled:opacity-50";
 export const secondaryButton =
   "inline-flex min-h-12 items-center justify-center px-6 text-center text-[0.8125rem] font-medium uppercase tracking-[0.14em] transition-colors duration-200 border border-espresso/30 text-espresso hover:border-espresso hover:bg-espresso/5 disabled:cursor-not-allowed disabled:opacity-50";
 

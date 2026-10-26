@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/button-link";
 import { Container } from "@/components/container";
+import { CoverImage } from "@/components/cover-image";
 import { PerAudience } from "@/components/per-audience";
 import { Photo } from "@/components/photo";
 import { SiteFooter } from "@/components/site-footer";
+import { categoryLabel, formatJournalDate, homeArticles } from "@/lib/journal/articles";
 import { homeContent } from "@/lib/home-content";
-import { exploreHref, fixMyStyleHref, hairStudioHref, shopHref, stylistHref } from "@/lib/navigation";
+import { exploreHref, fixMyStyleHref, hairStudioHref, journalHref, shopHref, stylistHref } from "@/lib/navigation";
 
 /*
   The homepage follows the audience chosen in My Account (Styling Preferences). The
@@ -33,7 +35,10 @@ const steps = [
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs uppercase tracking-[0.22em] text-stone">{children}</p>
+    <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-burgundy">
+      <span aria-hidden="true" className="h-px w-8 bg-burgundy/60" />
+      {children}
+    </p>
   );
 }
 
@@ -43,6 +48,14 @@ const sectionHeading =
 export default function Home() {
   return (
     <>
+      {/*
+        The first thing in the page must be a real box. When navigating, Next.js scrolls to
+        the first element of the new page that has a box, and the per-audience wrappers
+        below use display: contents (no box), so without this it skipped past the hero and
+        landed partway down the page.
+      */}
+      <div aria-hidden="true" className="h-0" />
+
       {/* Hero */}
       <PerAudience>
         {(audience) => {
@@ -69,18 +82,19 @@ export default function Home() {
                     </ButtonLink>
                     {/* One clear action on phones; the Journal is one tap away in Explore. */}
                     <div className="hidden md:block">
-                      <ButtonLink href="/#style-journal" variant="secondary">
+                      <ButtonLink href={journalHref} variant="secondary">
                         Explore the Journal
                       </ButtonLink>
                     </div>
                   </div>
                 </div>
 
-                <Photo
+                <CoverImage
                   name={content.heroPhoto}
+                  icon="discover"
                   sizes="(min-width: 768px) 50vw, 100vw"
                   className="order-first h-[34dvh] min-h-44 md:order-none md:h-auto md:aspect-[3/4] lg:aspect-[4/5]"
-                  position={content.heroPosition}
+                  imageClassName={content.heroFocus}
                   // Only the default audience's hero is preloaded; the other loads when shown.
                   preload={audience === "women"}
                 />
@@ -118,7 +132,11 @@ export default function Home() {
                         className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
                       />
                       <div className="min-w-0">
-                        <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
+                        <p className="md:mt-5">
+                          <span className="inline-block bg-sage/25 px-2 py-0.5 text-[0.6875rem] uppercase tracking-[0.18em] text-espresso">
+                            Available
+                          </span>
+                        </p>
                         <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
                           Discover Your Style
                         </h3>
@@ -136,7 +154,11 @@ export default function Home() {
                         className="aspect-square w-28 shrink-0 md:aspect-[4/5] md:w-auto"
                       />
                       <div className="min-w-0">
-                        <p className="text-xs uppercase tracking-[0.22em] text-stone md:mt-5">Available</p>
+                        <p className="md:mt-5">
+                          <span className="inline-block bg-sage/25 px-2 py-0.5 text-[0.6875rem] uppercase tracking-[0.18em] text-espresso">
+                            Available
+                          </span>
+                        </p>
                         <h3 className="mt-1 font-display text-2xl leading-7 md:mt-2 md:text-3xl md:leading-normal">
                           Hair Studio
                         </h3>
@@ -167,7 +189,7 @@ export default function Home() {
       <section
         id="how-it-works"
         aria-labelledby="how-heading"
-        className="scroll-mt-16 border-y border-sand bg-soft-white lg:scroll-mt-20"
+        className="scroll-mt-16 border-y border-sand bg-cream lg:scroll-mt-20"
       >
         <Container className="py-12 md:py-24 lg:py-28">
           <div className="max-w-2xl">
@@ -248,7 +270,7 @@ export default function Home() {
       <div id="fix-my-style" className="scroll-mt-16 lg:scroll-mt-20" />
       <PerAudience>
         {(audience) => (
-          <section aria-labelledby={`fix-heading-${audience}`} className="bg-sand/60">
+          <section aria-labelledby={`fix-heading-${audience}`} className="bg-cream">
             <Container className="grid gap-10 py-16 md:grid-cols-2 md:items-center md:gap-12 md:py-24 lg:gap-24 lg:py-28">
               <Photo
                 name={homeContent[audience].fix.photo}
@@ -279,11 +301,13 @@ export default function Home() {
         )}
       </PerAudience>
 
-      {/* Style Journal preview */}
+      {/* Style Journal: real articles from the publishers, for the chosen audience. */}
       <div id="style-journal" className="scroll-mt-16 lg:scroll-mt-20" />
       <PerAudience>
         {(audience) => {
-          const articles = homeContent[audience].articles;
+          const picks = homeArticles(audience, 5);
+          if (picks.length === 0) return null;
+          const [lead, ...others] = picks;
           return (
             <section aria-labelledby={`journal-heading-${audience}`}>
               <Container className="py-12 md:py-24 lg:py-32">
@@ -291,61 +315,73 @@ export default function Home() {
                   <div>
                     <Eyebrow>Style Journal</Eyebrow>
                     <h2 id={`journal-heading-${audience}`} className={sectionHeading}>
-                      Practical guides, <em>kindly written.</em>
+                      Practical guides, <em>from the experts.</em>
                     </h2>
                   </div>
-                  <p className="max-w-xs text-sm leading-6 text-stone">
-                    A preview of what we&rsquo;re writing. The Journal isn&rsquo;t
-                    published yet.
-                  </p>
+                  <div className="max-w-xs">
+                    <p className="text-sm leading-6 text-stone">
+                      Articles from fashion publishers we trust. Each opens on the publisher&rsquo;s own site.
+                    </p>
+                    <ButtonLink href={journalHref} variant="secondary" className="mt-4 w-full sm:w-auto">
+                      Browse the Journal
+                    </ButtonLink>
+                  </div>
                 </div>
 
                 <ul className="mt-10 grid gap-10 md:mt-16 lg:grid-cols-12 lg:gap-16">
                   <li className="lg:col-span-5">
-                    <article>
-                      <Photo
-                        name={articles[0].photo}
+                    <a href={lead.url} target="_blank" rel="noopener noreferrer" className="group block">
+                      <CoverImage
+                        name={lead.cover}
+                        icon="journal"
                         sizes="(min-width: 1024px) 40vw, 100vw"
-                        className="aspect-[4/3] lg:aspect-[4/5]"
+                        className="aspect-[4/3] rounded-lg lg:aspect-[4/5]"
+                        imageClassName="object-[50%_30%]"
                       />
                       <p className="mt-5 text-xs uppercase tracking-[0.22em] text-stone">
-                        {articles[0].topic}
+                        {categoryLabel[lead.category]}
                       </p>
-                      <h3 className="mt-2 font-display text-3xl md:text-4xl">
-                        {articles[0].title}
-                      </h3>
-                      <p className="mt-3 max-w-md leading-7 text-stone">
-                        {articles[0].text}
+                      <h3 className="mt-2 font-display text-3xl group-hover:text-burgundy md:text-4xl">{lead.title}</h3>
+                      <p className="mt-3 max-w-md leading-7 text-stone">{lead.summary}</p>
+                      <p className="mt-3 text-xs text-stone">
+                        <span className="font-medium text-espresso">{lead.publisher}</span> · {lead.author} ·{" "}
+                        {formatJournalDate(lead.publishedAt)}
                       </p>
-                    </article>
+                      <span className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-burgundy group-hover:underline">
+                        Read on {lead.publisher} ↗<span className="sr-only"> (opens in a new tab)</span>
+                      </span>
+                    </a>
                   </li>
                   <li className="lg:col-span-7">
                     <ul>
-                      {articles.slice(1).map((article, index) => (
+                      {others.map((article, index) => (
                         <li
-                          key={article.title}
+                          key={article.id}
                           className={`border-t border-sand py-6 first:border-t-0 first:pt-0 lg:first:border-t lg:first:pt-6 ${
                             index >= 2 ? "hidden md:block" : ""
                           }`}
                         >
-                          <article className="flex gap-5 md:gap-8">
-                            <Photo
-                              name={article.photo}
+                          <a href={article.url} target="_blank" rel="noopener noreferrer" className="group flex gap-5 md:gap-8">
+                            <CoverImage
+                              name={article.cover}
+                              icon="journal"
                               sizes="160px"
-                              className="aspect-square w-24 shrink-0 md:w-36"
+                              className="aspect-square w-24 shrink-0 rounded-md md:w-36"
                             />
                             <div>
                               <p className="text-xs uppercase tracking-[0.22em] text-stone">
-                                {article.topic}
+                                {categoryLabel[article.category]}
                               </p>
-                              <h3 className="mt-2 font-display text-2xl leading-7 md:text-[1.75rem] md:leading-9">
+                              <h3 className="mt-2 font-display text-2xl leading-7 group-hover:text-burgundy md:text-[1.75rem] md:leading-9">
                                 {article.title}
                               </h3>
-                              <p className="mt-2 leading-7 text-stone">
-                                {article.text}
+                              <p className="mt-2 text-xs text-stone">
+                                <span className="font-medium text-espresso">{article.publisher}</span> ·{" "}
+                                {formatJournalDate(article.publishedAt)}
+                                <span className="sr-only"> (opens in a new tab)</span>
                               </p>
                             </div>
-                          </article>
+                          </a>
                         </li>
                       ))}
                     </ul>

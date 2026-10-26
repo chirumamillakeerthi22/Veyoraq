@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { HOME_EVENT } from "@/components/home-link";
 import { useAuthState } from "@/lib/auth/use-auth";
 import { accountHref, settingsHref, signUpHref } from "@/lib/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -28,6 +29,13 @@ export function AccountMenu() {
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
   const open = openOn === pathname;
+
+  // Clicking Home or the logo closes this menu, even when already on the homepage.
+  useEffect(() => {
+    const close = () => setOpenOn(null);
+    window.addEventListener(HOME_EVENT, close);
+    return () => window.removeEventListener(HOME_EVENT, close);
+  }, []);
 
   useEffect(() => {
     if (!open) return;

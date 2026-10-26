@@ -20,17 +20,11 @@ export type HomeLook = {
   frame: string;
 };
 
-export type HomeArticle = {
-  topic: string;
-  title: string;
-  text: string;
-  photo: PhotoName;
-};
-
 export type HomeContent = {
   heroText: string;
   heroPhoto: PhotoName;
-  heroPosition: string;
+  // Responsive focal point for the hero photo (Tailwind object-position classes).
+  heroFocus: string;
   discover: { photo: PhotoName; text: string };
   hair: { photo: PhotoName; text: string };
   moreText: string;
@@ -38,7 +32,6 @@ export type HomeContent = {
   looksNote: string;
   looks: HomeLook[];
   fix: { photo: PhotoName };
-  articles: HomeArticle[];
 };
 
 const lookLayouts = [
@@ -50,8 +43,8 @@ const lookLayouts = [
 export const homeContent: Record<Audience, HomeContent> = {
   women: {
     heroText: "Find your personal style and get outfit ideas that fit your taste and budget.",
-    heroPhoto: "hero",
-    heroPosition: "50% 20%",
+    heroPhoto: "heroEditorial",
+    heroFocus: "object-[50%_18%] md:object-[50%_40%]",
     discover: {
       photo: "colour",
       text: "A short quiz that turns your taste, colours and occasions into outfit ideas.",
@@ -68,18 +61,11 @@ export const homeContent: Record<Audience, HomeContent> = {
       { title: "Elevated Occasion", text: "Considered pieces for moments worth dressing for.", photo: "occasion", ...lookLayouts[2] },
     ],
     fix: { photo: "flatLay" },
-    articles: [
-      { topic: "Colour", title: "Finding the colours you love to wear", text: "A gentle way to notice which shades you reach for, and how to build on them.", photo: "journalColour" },
-      { topic: "Proportion", title: "Styling silhouettes and proportions", text: "Simple ways to balance shapes, lengths and layers so an outfit feels right to you.", photo: "journalSilhouette" },
-      { topic: "Texture", title: "Creating outfits with prints and textures", text: "How to mix knits, weaves and patterns without overthinking it.", photo: "journalTexture" },
-      { topic: "Everyday", title: "Building versatile everyday looks", text: "A handful of pieces, combined well, that carry you through the week.", photo: "journalEveryday" },
-      { topic: "Occasion", title: "Dressing for different occasions", text: "From relaxed gatherings to formal evenings: starting points for what to wear.", photo: "journalOccasion" },
-    ],
   },
   men: {
     heroText: "Find your personal style and get menswear ideas that fit your taste and budget.",
     heroPhoto: "menCoat",
-    heroPosition: "50% 25%",
+    heroFocus: "object-[50%_20%] md:object-[50%_25%]",
     discover: {
       photo: "menRelaxed",
       text: "A short quiz that turns your taste, colours and occasions into menswear ideas.",
@@ -96,24 +82,5 @@ export const homeContent: Record<Audience, HomeContent> = {
       { title: "Elevated Occasion", text: "Sharp tailoring for moments worth dressing for.", photo: "menOccasion", ...lookLayouts[2] },
     ],
     fix: { photo: "menFlatLay" },
-    articles: [
-      { topic: "Colour", title: "Finding the colours you love to wear", text: "A gentle way to notice which shades you reach for, and how to build on them.", photo: "menJournalColour" },
-      { topic: "Proportion", title: "Tailoring, fit and proportion", text: "Simple ways to balance shoulders, length and taper so an outfit feels right to you.", photo: "menJournalSilhouette" },
-      { topic: "Texture", title: "Knits, weaves and layering", text: "How to mix textures and layers without overthinking it.", photo: "menJournalTexture" },
-      { topic: "Everyday", title: "Building versatile everyday looks", text: "A handful of pieces, combined well, that carry you through the week.", photo: "menJournalEveryday" },
-      { topic: "Occasion", title: "Dressing for different occasions", text: "From relaxed gatherings to formal evenings: starting points for what to wear.", photo: "menJournalOccasion" },
-    ],
   },
 };
-
-/*
-  The Journal teasers most relevant to fit, for the audience. The Journal is a preview
-  (no articles are published yet), so these are the same teasers shown on the
-  homepage, never separate or invented articles.
-*/
-export function fitJournalPicks(audience: Audience): HomeArticle[] {
-  const { articles } = homeContent[audience];
-  return ["Proportion", "Everyday", "Colour"]
-    .map((topic) => articles.find((article) => article.topic === topic))
-    .filter((article): article is HomeArticle => Boolean(article));
-}

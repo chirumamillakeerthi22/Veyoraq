@@ -9,7 +9,7 @@ type ButtonLinkProps = {
 };
 
 const variantClasses = {
-  primary: "bg-espresso text-ivory hover:bg-stone",
+  primary: "bg-burgundy text-ivory hover:bg-burgundy-deep",
   secondary:
     "border border-espresso/30 text-espresso hover:border-espresso hover:bg-espresso/5",
   inverse: "bg-ivory text-espresso hover:bg-sand",

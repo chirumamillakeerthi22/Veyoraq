@@ -54,6 +54,13 @@ export default function AboutPage() {
             : cuts, proportions and silhouettes you may enjoy, from a description, measurements,
             sizes or an optional photo.
           </li>
+          <li>
+            <Link href="/journal" className={link}>
+              Style Journal
+            </Link>
+            : a searchable list of real articles from fashion publishers, each linking to the
+            original on the publisher&rsquo;s own site.
+          </li>
           <li>Saved Styles, your saved Color Analysis reports and a Wishlist, once you sign in.</li>
         </ul>
       </LegalSection>
@@ -61,8 +68,7 @@ export default function AboutPage() {
       <LegalSection title="What is not available yet">
         <p>
           Shop has no products connected, so there are no listings, prices or links. Where an
-          outfit idea does not match a real product, it is labelled as an idea. The Style Journal
-          is a preview and is not published.
+          outfit idea does not match a real product, it is labelled as an idea.
         </p>
       </LegalSection>
 

@@ -17,12 +17,18 @@ export function CoverImage({
   icon,
   className = "",
   position,
+  imageClassName = "",
+  preload = false,
 }: {
   name: PhotoName;
   sizes: string;
   icon: NavIcon;
   className?: string;
   position?: string;
+  // Extra classes for the image itself, e.g. responsive focal points like "object-[50%_20%]".
+  imageClassName?: string;
+  // Load this image first (the page's main picture).
+  preload?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const photo = photos[name];
@@ -39,8 +45,9 @@ export function CoverImage({
           alt={photo.alt}
           fill
           sizes={sizes}
+          preload={preload}
           onError={() => setFailed(true)}
-          className="object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.04] motion-safe:group-active:scale-[1.02]"
+          className={`object-cover ${imageClassName}  transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.04] motion-safe:group-active:scale-[1.02]`}
           style={position ? { objectPosition: position } : undefined}
         />
       )}

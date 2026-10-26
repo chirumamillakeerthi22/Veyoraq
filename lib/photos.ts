@@ -76,6 +76,13 @@ export const photos = {
     page: "1eV-OecIKgI",
     photographer: "@hudsoncrafted",
   },
+  // Homepage hero for Women: a tall studio editorial with plenty of calm space.
+  heroEditorial: {
+    id: "1664076458686-3449062080ac",
+    alt: "A woman in a long silver satin dress, dark gloves and sunglasses, posed against a soft pale studio backdrop",
+    page: "XIzZ0eRDUuo",
+    photographer: "@lgrt",
+  },
   menHair: {
     id: "1593702275687-f8b402bf1fb5",
     alt: "A barber giving a man a neat short fade, close up",

@@ -52,7 +52,7 @@ export function SavedTabs({
             aria-controls={`saved-panel-${t.id}`}
             onClick={() => setTab(t.id)}
             className={`min-h-11 px-2 text-sm transition-colors duration-200 ${
-              tab === t.id ? "bg-espresso text-ivory" : "hover:bg-espresso/5"
+              tab === t.id ? "bg-burgundy text-ivory" : "hover:bg-espresso/5"
             }`}
           >
             {t.label}

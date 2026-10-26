@@ -510,6 +510,15 @@ Not verified: results for several genuinely different faces (only one licensed f
 - Footer: the full footer is rendered by the homepage only. The slim footer and all per-route footer layouts were removed. Legal pages are reached from My Account and the homepage footer.
 - Not done: face-shape input (the app has no face-shape data and the brief says only when available); size and fit attributes on products (the product record has none).
 
+### Brand colours, hero, footer, Home navigation, real Style Journal (2026-10-26, branch `nav-save-footer`, uncommitted)
+
+- Tokens (`app/globals.css`): ivory #FAF7F2, cream #F0E7DC, espresso #30251F, burgundy #7D3948 (+ deep #632C39 for hover), dusty rose #C58E94, sage #8C9980, and a darker sage "olive" #66745A for large numerals. Burgundy is used only for primary buttons, active navigation, selected states and small accents. Colour swatches in Color Analysis still use their real HEX values.
+- Home/logo: `components/home-link.tsx` (logo, bottom-nav Home and footer Home). From the homepage it clears any #hash, scrolls to the top and refreshes data without a reload; the header account menu closes. A zero-height first element in `app/page.tsx` fixes a real bug: Next.js was scrolling to the first element with a box, which was partway down the page because the per-audience wrappers use `display: contents`.
+- Women's hero: Unsplash photo by @lgrt (page XIzZ0eRDUuo, Unsplash licence), in `lib/photos.ts` as `heroEditorial`, with different focal points for phones and desktop and an icon fallback if it fails. The men's hero is unchanged (camel coat).
+- Footer: one component, four groups (Explore, Your style, Company, Legal). Phones: native collapsible groups. Tablet: two columns. Desktop: four equal columns.
+- Style Journal (`/journal`): `lib/journal/articles.ts` holds 16 real articles from Who What Wear and MR PORTER (8 per audience, every category covered for both). Each entry was opened in a browser and its headline, author, date and canonical link read from the page. Summaries are written by VEYORAQ; covers are VEYORAQ's own photography; every link opens the publisher's site. No API or RSS feed could be used (not offered, redirected, or refused to automated requests), so nothing is fetched automatically. Vogue, GQ, Esquire and Harper's Bazaar could not be checked and are not used. Search: `lib/journal/search.ts` (title, tags, category, summary, publisher, author, audience; colour/color and men's/mens normalised; everyday synonyms), combined with category filter and an audience scope (your preference by default, one tap for both). The homepage and Fit Guidance Journal sections use the same data.
+- Not done: an article detail page (not appropriate: no VEYORAQ-licensed article text exists); automatic content ingestion; images from the publishers (licensing not cleared, so not used).
+
 ## 8. Update Rules
 
 Update this file after meaningful development work.

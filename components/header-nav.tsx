@@ -21,7 +21,7 @@ function TopLink({ link, active, withIcon }: { link: NavLink; active: boolean; w
       aria-label={link.shortLabel ? link.label : undefined}
       aria-current={active ? "page" : undefined}
       className={`group relative flex min-h-11 items-center gap-2 px-1 text-[0.8125rem] tracking-wide transition-colors duration-200 ${
-        active ? "text-espresso" : "text-stone hover:text-espresso"
+        active ? "text-burgundy" : "text-stone hover:text-espresso"
       }`}
     >
       {withIcon && (
@@ -33,7 +33,7 @@ function TopLink({ link, active, withIcon }: { link: NavLink; active: boolean; w
       {text}
       <span
         aria-hidden="true"
-        className={`absolute inset-x-1 bottom-1.5 h-px origin-left bg-gold transition-transform duration-300 ${
+        className={`absolute inset-x-1 bottom-1.5 h-px origin-left bg-burgundy transition-transform duration-300 ${
           active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
         }`}
       />

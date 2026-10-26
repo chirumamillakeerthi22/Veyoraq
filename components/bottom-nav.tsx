@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HomeLink } from "@/components/home-link";
 import { NavIconGlyph } from "@/components/nav-icon";
 import { bottomNavLinks, isActiveLink } from "@/lib/navigation";
 
@@ -23,28 +24,30 @@ export function BottomNav() {
         {bottomNavLinks.map((link) => {
           const active = isActiveLink(pathname, link.href, link.activeUnder);
           const text = link.shortLabel ?? link.label;
+          // Home always returns to the top of the homepage, even from the homepage.
+          const NavLink = link.href === "/" ? HomeLink : Link;
           return (
             <li key={link.href}>
-              <Link
+              <NavLink
                 href={link.href}
                 aria-current={active ? "page" : undefined}
                 aria-label={link.shortLabel ? link.label : undefined}
                 className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs tracking-wide transition-colors duration-200 ${
-                  active ? "text-espresso" : "text-stone"
+                  active ? "text-burgundy" : "text-stone"
                 }`}
               >
                 <span
                   aria-hidden="true"
-                  className={`absolute inset-x-6 top-0 h-px bg-gold transition-opacity duration-200 ${
+                  className={`absolute inset-x-6 top-0 h-px bg-burgundy transition-opacity duration-200 ${
                     active ? "opacity-100" : "opacity-0"
                   }`}
                 />
                 <NavIconGlyph
                   name={link.icon}
-                  className={`h-6 w-6 ${active ? "text-gold" : ""}`}
+                  className={`h-6 w-6 ${active ? "text-burgundy" : ""}`}
                 />
                 {text}
-              </Link>
+              </NavLink>
             </li>
           );
         })}

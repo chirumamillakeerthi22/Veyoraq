@@ -4,6 +4,7 @@ import {
   fitGuidanceHref,
   fixMyStyleHref,
   hairStudioHref,
+  journalHref,
   stylistHref,
   type NavIcon,
 } from "@/lib/navigation";
@@ -21,7 +22,6 @@ export type ExploreService = {
   icon: NavIcon;
   href: string;
   status: "available" | "preview";
-  // The Journal preview lives on the homepage and is not published yet.
   cover: Record<Audience, PhotoName>;
   // Text that differs by audience, when it does.
   textFor?: Partial<Record<Audience, string>>;
@@ -73,10 +73,10 @@ export const exploreServices: ExploreService[] = [
   },
   {
     name: "Style Journal",
-    text: "Practical, kindly written guides on colour, proportion, texture and occasions.",
+    text: "Search real articles from fashion publishers on colour, fit, workwear, occasions and more.",
     icon: "journal",
-    href: "/#style-journal",
-    status: "preview",
+    href: journalHref,
+    status: "available",
     cover: { women: "journalTexture", men: "menJournalTexture" },
   },
 ];
